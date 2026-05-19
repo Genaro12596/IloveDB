@@ -1,0 +1,24 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd \"c:\\\\Users\\\\ANDYN\\\\OneDrive\\\\Documentos\\\\Cuarto semestre\\\\Ingenieria de software\\\\soft2\\\\IloveBD\" ; python run\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\ANDYN\\\\OneDrive\\\\Documentos\\\\Cuarto semestre\\\\Ingenieria de software\\\\soft2\\\\IloveBD'; python run\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cmd /c \"cd c:\\\\Users\\\\ANDYN\\\\OneDrive\\\\Documentos\\\\Cuarto semestre\\\\Ingenieria de software\\\\soft2\\\\IloveBD && python -m py_compile app\\\\services\\\\optimizer_service\\.py && echo OK\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\ANDYN\\\\OneDrive\\\\Documentos\\\\Cuarto semestre\\\\Ingenieria de software\\\\soft2\\\\IloveBD' ; python start_server\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\ANDYN\\\\OneDrive\\\\Documentos\\\\Cuarto semestre\\\\Ingenieria de software\\\\soft2\\\\IloveBD\" ; python -c \"from app import create_app; app = create_app\\(\\); print\\('✅ App inicializada correctamente'\\); print\\('Herramientas disponibles:'\\); routes = \\[str\\(r\\) for r in app\\.url_map\\.iter_rules\\(\\) if not r\\.rule\\.startswith\\('/static'\\)\\]; \\[print\\(f'  - \\{r\\}'\\) for r in sorted\\(set\\(routes\\)\\)\\[:15\\]\\]\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
