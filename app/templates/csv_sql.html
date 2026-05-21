@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section section-page">
+    <div class="section__header">
+        <h2>Convierte archivos CSV en sentencias SQL.</h2>
+        <p class="section__subtitle">Agrega tu tabla y datos para generar SQL listos para tu base de datos.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel__grid">
+            <div class="panel__field">
+                <label class="field-label" for="table-name">Nombre de tabla</label>
+                <input id="table-name" class="input" placeholder="ej. usuarios" />
+            </div>
+            <div class="panel__field panel__field--full">
+                <label class="field-label" for="csv-input">Contenido CSV</label>
+                <textarea id="csv-input" class="input input--textarea" placeholder="id,nombre,email\n1,Ana,ana@mail.com"></textarea>
+            </div>
+        </div>
+
+        <div class="panel__footer">
+            <button onclick="convertCSV()" class="button button--primary">Convertir CSV</button>
+            <button onclick="loadExampleCSV()" style="flex: 0.5; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer; margin-left: 0.75rem;">
+                📋 Ejemplo
+            </button>
+        </div>
+    </div>
+
+    <div id="csv-error" class="form-error" aria-live="polite"></div>
+
+    <div class="output-card">
+        <div class="output-card__header">
+            <h3>SQL generado</h3>
+            <p>Copia la consulta o ajusta el modelo a tu base de datos.</p>
+        </div>
+        <pre><code id="csv-result" class="language-sql"></code></pre>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+            <button id="copy-insert-btn" onclick="handleCopyInsertCSV()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📋 Copiar INSERT
+            </button>
+            <button id="download-csv-sql-btn" onclick="handleDownloadCSVSQL()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                💾 Descargar SQL
+            </button>
+        </div>
+    </div>
+</section>
+<script>
+async function convertCSV() {
+    const tableName = document.getElementById('table-name').value.trim();
+    const csvContent = document.getElementById('csv-input').value.trim();
+    
+    if (!tableName || !csvContent) {
+        showWarning('Advertencia', 'Completa los campos requeridos');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/csv-to-sql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table_name: tableName, csv_data: csvContent })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showError('Error', data.error);
+            return;
+        }
+        
+        document.getElementById('csv-result').textContent = data.sql;
+        if (window.Prism) {
+            Prism.highlightElement(document.getElementById('csv-result'));
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error', 'Error de conexión');
+    }
+}
+
+async function handleCopyInsertCSV() {
+    const content = document.getElementById('csv-result').textContent;
+    if (!content) {
+        showWarning('Advertencia', 'No hay contenido para copiar');
+        return;
+    }
+    await copyToClipboard(content, 'copy-insert-btn');
+}
+
+async function handleDownloadCSVSQL() {
+    const content = document.getElementById('csv-result').textContent;
+    if (!content) {
+        showWarning('Advertencia', 'No hay contenido para descargar');
+        return;
+    }
+    downloadFile(content, 'insert_data.sql', 'text/sql');
+}
+
+function loadExampleCSV() {
+    document.getElementById('table-name').value = 'usuarios';
+    document.getElementById('csv-input').value = 'id,nombre,email,fecha_registro\n1,Ana García,ana@ejemplo.com,2024-01-15\n2,Carlos López,carlos@ejemplo.com,2024-02-20\n3,María Rodríguez,maria@ejemplo.com,2024-03-10';
+    convertCSV();
+}
+</script>
+{% endblock %}

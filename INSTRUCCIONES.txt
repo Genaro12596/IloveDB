@@ -1,0 +1,101 @@
+╔════════════════════════════════════════════════════════════════╗
+║           🚀 CÓMO EJECUTAR iLoveDB v0.9                        ║
+╚════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPCIÓN 1️⃣ - DOBLE CLIC (LA MÁS FÁCIL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abre el Explorador de Archivos
+2. Ve a: c:\Users\ANDYN\OneDrive\Documentos\Cuarto semestre\Ingenieria de software\soft2\IloveBD
+3. Busca el archivo: START.bat (o START)
+4. DOBLE CLIC en START.bat
+5. ¡La aplicación se abrirá automáticamente! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPCIÓN 2️⃣ - LÍNEA DE COMANDOS (CMD)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Abre CMD/Terminal y ejecuta:
+
+cd c:\Users\ANDYN\OneDrive\Documentos\Cuarto\ semestre\Ingenieria\ de\ software\soft2\IloveBD
+
+Luego:
+
+python run.py
+
+O si usas venv:
+
+.\venv\Scripts\python.exe run.py
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPCIÓN 3️⃣ - POWERSHELL (VS CODE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abre VS Code
+2. Abre terminal: Ctrl + `
+3. Ejecuta:
+
+cd 'c:\Users\ANDYN\OneDrive\Documentos\Cuarto semestre\Ingenieria de software\soft2\IloveBD'
+python run.py
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ RESULTADO ESPERADO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Deberías ver en la terminal:
+
+  WARNING in app.run_simple: This is a development server.
+  Running on http://127.0.0.1:5000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 ACCEDER A LA APP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abre tu navegador (Chrome, Firefox, Edge, etc)
+2. Ve a: http://localhost:5000
+3. ¡Listo! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ SOLUCIONAR PROBLEMAS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ Error: "python no se reconoce"
+   ✅ Solución: Instala Python desde python.org o usa:
+      c:\path\to\venv\Scripts\python.exe run.py
+
+❌ Puerto 5000 ya está en uso
+   ✅ Solución: Cambia el puerto en run.py línea 6
+
+❌ Módulos no encontrados
+   ✅ Solución: Ejecuta:
+      pip install -r requirements.txt
+
+❌ Caché del navegador
+   ✅ Solución: Presiona Ctrl+Shift+R (reload sin caché)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 UNA VEZ EJECUTADO, PRUEBA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ Haz clic en "SQL Optimizer"
+2. ✅ Ingresa: SELECT * FROM usuarios;
+3. ✅ Haz clic en "Analizar"
+4. ✅ Ve los problemas detectados
+5. ✅ Prueba el botón "Copiar"
+6. ✅ Cambia a tema oscuro (🌙)
+7. ✅ ¡Disfruta! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+¿NECESITAS AYUDA?
+Abre el archivo: GUIA_PRUEBA.md para más detalles
+
+═════════════════════════════════════════════════════════════════

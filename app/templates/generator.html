@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section section-page">
+    <div class="section__header">
+        <h2>Genera consultas SQL en segundos.</h2>
+        <p class="section__subtitle">Define la tabla y columnas, y obtén SELECT listos para usar.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel__grid">
+            <div class="panel__field">
+                <label class="field-label" for="table">Tabla</label>
+                <input id="table" class="input" placeholder="ej. usuarios" />
+            </div>
+            <div class="panel__field panel__field--full">
+                <label class="field-label" for="columns">Columnas</label>
+                <input id="columns" class="input" placeholder="id, nombre, email" />
+            </div>
+        </div>
+
+        <div class="panel__footer">
+            <button onclick="generateSQL()" class="button button--primary">Generar SQL</button>
+        </div>
+    </div>
+
+    <div id="generator-error" class="form-error" aria-live="polite"></div>
+
+    <div class="output-card">
+        <div class="output-card__header">
+            <h3>Consulta generada</h3>
+            <p>Pega este SQL en tu editor o ejecútalo directamente en tu base de datos.</p>
+        </div>
+        <pre><code id="generator-result" class="language-sql"></code></pre>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+            <button id="copy-query-btn" onclick="handleCopyQueryGenerator()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📋 Copiar Query
+            </button>
+            <button id="download-gen-sql-btn" onclick="handleDownloadGeneratorSQL()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                💾 Descargar SQL
+            </button>
+        </div>
+    </div>
+</section>
+<script>
+async function generateSQL() {
+    const table = document.getElementById('table').value.trim();
+    const columns = document.getElementById('columns').value.trim();
+    
+    if (!table || !columns) {
+        showWarning('Advertencia', 'Completa los campos requeridos');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/generate-sql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table, columns })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showError('Error', data.error);
+            return;
+        }
+        
+        document.getElementById('generator-result').textContent = data.sql;
+        if (window.Prism) {
+            Prism.highlightElement(document.getElementById('generator-result'));
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error', 'Error de conexión');
+    }
+}
+
+async function handleCopyQueryGenerator() {
+    const content = document.getElementById('generator-result').textContent;
+    if (!content) {
+        showWarning('Advertencia', 'No hay contenido para copiar');
+        return;
+    }
+    await copyToClipboard(content, 'copy-query-btn');
+}
+
+async function handleDownloadGeneratorSQL() {
+    const content = document.getElementById('generator-result').textContent;
+    if (!content) {
+        showWarning('Advertencia', 'No hay contenido para descargar');
+        return;
+    }
+    downloadFile(content, 'query_generated.sql', 'text/sql');
+}
+</script>
+{% endblock %}

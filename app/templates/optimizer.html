@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="tool-page">
+    <!-- Header -->
+    <div class="tool-header" style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin: 0;">SQL Optimizer</h1>
+        <p style="color: var(--muted); margin: 0.5rem 0 0 0; font-size: 0.95rem;">
+            Analiza tus consultas SQL y detecta problemas de rendimiento
+        </p>
+    </div>
+
+    <!-- Main Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <!-- Input Section -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
+            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">Ingresa SQL</h2>
+            <p style="margin: 0 0 1rem 0; color: var(--muted); font-size: 0.9rem;">Pega tu consulta para analizar</p>
+            
+            <textarea 
+                id="optimizer-input" 
+                style="width: 100%; min-height: 12rem; padding: 0.875rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); font-family: monospace; font-size: 0.9rem; resize: vertical;"
+                placeholder="SELECT * FROM usuarios WHERE nombre LIKE '%juan%';"
+            ></textarea>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                <button onclick="analyzeSQL()" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    Analizar
+                </button>
+                <button onclick="resetOptimizer()" style="flex: 0.5; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer;">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
+            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">Resultados</h2>
+            <p style="margin: 0 0 1rem 0; color: var(--muted); font-size: 0.9rem;" id="analysis-summary">Aquí aparecerán los resultados</p>
+
+            <div id="optimizer-results" style="max-height: 18rem; overflow-y: auto;">
+                <div style="text-align: center; color: var(--muted); padding: 2rem;">
+                    <p>👆 Ingresa una consulta SQL y haz clic en "Analizar"</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+                <button id="copy-analysis-btn" onclick="handleCopyAnalysis()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    📋 Copiar Análisis
+                </button>
+                <button id="download-analysis-btn" onclick="handleDownloadAnalysis()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    💾 Descargar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Examples Section -->
+    <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Ejemplos para probar:</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+            <button onclick="loadExample('SELECT * FROM usuarios;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                Full Table Scan
+            </button>
+            <button onclick="loadExample('SELECT * FROM productos WHERE nombre LIKE \\'%laptop%\\';')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                LIKE con %
+            </button>
+            <button onclick="loadExample('SELECT * FROM orders WHERE id NOT IN (SELECT order_id FROM returns);')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                NOT IN Problemático
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function analyzeSQL() {
+    const sql = document.getElementById('optimizer-input').value.trim();
+    
+    if (!sql) {
+        alert('Ingresa una consulta SQL');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/optimize-sql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sql })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert('Error: ' + (data.error || 'Error desconocido'));
+            return;
+        }
+        
+        displayResults(data);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+}
+
+function displayResults(data) {
+    const resultsContainer = document.getElementById('optimizer-results');
+    const summary = document.getElementById('analysis-summary');
+    
+    const criticals = data.critical_count || 0;
+    const warnings = data.warning_count || 0;
+    const infos = data.info_count || 0;
+    summary.textContent = `🔴 ${criticals} críticos, 🟡 ${warnings} advertencias, 🔵 ${infos} info`;
+    
+    if (!data.issues || data.issues.length === 0) {
+        resultsContainer.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text);"><strong>✅ Sin problemas detectados</strong></div>';
+        return;
+    }
+    
+    const html = data.issues.map((issue, idx) => {
+        const severityColors = {
+            'error': 'var(--error)',
+            'warning': 'var(--warning)',
+            'info': 'var(--info)'
+        };
+        
+        const severityBg = {
+            'error': 'var(--error-soft)',
+            'warning': 'var(--warning-soft)',
+            'info': 'var(--info-soft)'
+        };
+        
+        const uniqueId = `issue-${idx}`;
+        
+        return `<div style="margin-bottom: 0.75rem; padding: 0.75rem; border-left: 4px solid ${severityColors[issue.severity]}; background: var(--panel); border-radius: 4px;">
+                    <div style="font-weight: 700; color: ${severityColors[issue.severity]}; margin-bottom: 0.25rem; cursor: pointer;" onclick="toggleDetails('${uniqueId}')">
+                        ${issue.title} ▼
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text); margin-bottom: 0.25rem;">${issue.description}</div>
+                    <div style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">💡 ${issue.suggestion}</div>
+                    <div id="${uniqueId}" style="display: none; background: var(--bg); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; font-size: 0.8rem;">
+                        ${issue.impact ? `<div style="margin-bottom: 0.25rem;"><strong>📊 Impacto:</strong> ${issue.impact}</div>` : ''}
+                        ${issue.example ? `<div style="background: var(--surface); padding: 0.5rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; word-break: break-word;"><strong>📝 Ejemplo:</strong>\n${issue.example}</div>` : ''}
+                    </div>
+                </div>`;
+    }).join('');
+    
+    resultsContainer.innerHTML = html;
+}
+
+function toggleDetails(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.style.display = element.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function generateAnalysisReport(data) {
+    let report = 'SQL OPTIMIZATION ANALYSIS REPORT\n';
+    report += '='.repeat(50) + '\n\n';
+    report += `Query: ${data.query}\n\n`;
+    report += `Summary:\n`;
+    report += `- Critical Issues: ${data.critical_count}\n`;
+    report += `- Warnings: ${data.warning_count}\n`;
+    report += `- Info: ${data.info_count}\n`;
+    report += `- Total Issues: ${data.total_issues}\n\n`;
+    
+    report += 'DETAILS:\n';
+    report += '-'.repeat(50) + '\n';
+    
+    data.issues.forEach((issue, idx) => {
+        report += `\n${idx + 1}. [${issue.severity.toUpperCase()}] ${issue.title}\n`;
+        report += `   Description: ${issue.description}\n`;
+        report += `   Suggestion: ${issue.suggestion}\n`;
+        if (issue.impact) report += `   Impact: ${issue.impact}\n`;
+        if (issue.example) report += `   Example:\n${issue.example.split('\n').map(l => '   ' + l).join('\n')}\n`;
+    });
+    
+    return report;
+}
+
+async function handleCopyAnalysis() {
+    const resultsHtml = document.getElementById('optimizer-results').textContent;
+    if (!resultsHtml || resultsHtml.includes('Ingresa una consulta')) {
+        showWarning('Advertencia', 'No hay análisis para copiar');
+        return;
+    }
+    await copyToClipboard(resultsHtml, 'copy-analysis-btn');
+}
+
+async function handleDownloadAnalysis() {
+    const sql = document.getElementById('optimizer-input').value.trim();
+    if (!sql) {
+        showWarning('Advertencia', 'No hay análisis para descargar');
+        return;
+    }
+    
+    // Hacer una llamada al API para obtener el último análisis
+    try {
+        const response = await fetch('/api/optimize-sql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sql })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            const report = generateAnalysisReport(data);
+            downloadFile(report, 'optimization_report.txt', 'text/plain');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error', 'No se pudo generar el reporte');
+    }
+}
+
+function resetOptimizer() {
+    document.getElementById('optimizer-input').value = '';
+    document.getElementById('optimizer-results').innerHTML = '<div style="text-align: center; color: var(--muted); padding: 2rem;"><p>👆 Ingresa una consulta SQL y haz clic en "Analizar"</p></div>';
+    document.getElementById('analysis-summary').textContent = 'Aquí aparecerán los resultados';
+}
+
+function loadExample(sql) {
+    document.getElementById('optimizer-input').value = sql;
+    analyzeSQL();
+}
+</script>
+{% endblock %}

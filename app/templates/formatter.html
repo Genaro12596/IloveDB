@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="tool-page">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.8rem; font-weight: 800; margin: 0;">Formateador SQL</h1>
+        <p style="color: var(--muted); margin: 0.5rem 0 0 0;">Formatea y organiza tus consultas SQL automáticamente</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <!-- Input -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
+            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">SQL Desordenado</h2>
+            <textarea 
+                id="sql-input" 
+                style="width: 100%; min-height: 12rem; padding: 0.875rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); font-family: monospace; font-size: 0.9rem; resize: vertical;"
+                placeholder="SELECT id,name,email FROM users WHERE status='active' AND created_at>'2024-01-01';"
+            ></textarea>
+            
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                <button onclick="formatSQL()" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer;">
+                    Formatear
+                </button>
+                <button onclick="resetFormatter()" style="flex: 0.5; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer;">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
+            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">SQL Formateado</h2>
+            <pre style="background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; min-height: 12rem; overflow-x: auto; margin: 0;"><code id="formatted-result" class="language-sql"></code></pre>
+            
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+                <button id="copy-sql-btn" onclick="handleCopySQLFormatter()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    📋 Copiar SQL
+                </button>
+                <button id="download-sql-btn" onclick="handleDownloadSQLFormatter()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    💾 Descargar TXT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ejemplos -->
+    <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
+        <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Ejemplos para probar:</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+            <button onclick="loadExample('SELECT id,name,email FROM users WHERE status=\\'active\\' ORDER BY name;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                SELECT simple con WHERE
+            </button>
+            <button onclick="loadExample('SELECT u.id,u.name,o.total FROM users u JOIN orders o ON u.id=o.user_id WHERE o.created_at>\\\"2024-01-01\\\" GROUP BY u.id;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                JOIN con GROUP BY
+            </button>
+            <button onclick="loadExample('SELECT * FROM (SELECT id,name FROM users WHERE status=\\'active\\') t WHERE t.id IN (SELECT user_id FROM orders);')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                Subconsulta anidada
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function formatSQL() {
+    const sql = document.getElementById("sql-input").value.trim();
+    
+    if (!sql) {
+        showError('Error', 'Ingresa una consulta SQL');
+        return;
+    }
+    
+    try {
+        const response = await fetch("/api/format-sql", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sql })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            showError('Error', data.error);
+            return;
+        }
+
+        document.getElementById("formatted-result").textContent = data.formatted_sql;
+        if (window.Prism) {
+            Prism.highlightElement(document.getElementById("formatted-result"));
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error', 'Error de conexión');
+    }
+}
+
+function resetFormatter() {
+    document.getElementById("sql-input").value = "";
+    document.getElementById("formatted-result").textContent = "";
+}
+
+function loadExample(sql) {
+    document.getElementById("sql-input").value = sql;
+    formatSQL();
+}
+
+async function handleCopySQLFormatter() {
+    const content = document.getElementById('formatted-result').textContent;
+    if (!content) {
+        showWarning('Advertencia', 'No hay contenido para copiar');
+        return;
+    }
+    await copyToClipboard(content, 'copy-sql-btn');
+}
+
+async function handleDownloadSQLFormatter() {
+    const content = document.getElementById('formatted-result').textContent;
+    if (!content) {
+        showWarning('Advertencia', 'No hay contenido para descargar');
+        return;
+    }
+    downloadFile(content, 'query.txt', 'text/plain');
+}
+</script>
+{% endblock %}

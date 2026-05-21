@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section section-page">
+    <div class="section__header">
+        <h2>Analiza tus tablas y detecta problemas de normalización.</h2>
+        <p class="section__subtitle">Ingresa la estructura y dependencias funcionales para evaluar 1FN, 2FN y 3FN.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel__grid">
+            <div class="panel__field">
+                <label class="field-label">Nombre de tabla</label>
+                <input id="norm-table" class="input" placeholder="ej. orders" />
+            </div>
+            <div class="panel__field">
+                <label class="field-label">Columnas (coma-separadas)</label>
+                <input id="norm-columns" class="input" placeholder="id, user_id, product_id, qty, total" />
+            </div>
+            <div class="panel__field">
+                <label class="field-label">Claves primarias (coma-separadas)</label>
+                <input id="norm-pk" class="input" placeholder="id" />
+            </div>
+            <div class="panel__field panel__field--full">
+                <label class="field-label">Dependencias funcionales (una por línea, ex: A,B->C)</label>
+                <textarea id="norm-fds" class="input input--textarea" placeholder="A->B\nuser_id->user_name"></textarea>
+            </div>
+        </div>
+
+        <div class="panel__footer panel__footer--space">
+            <button class="button button--secondary" onclick="resetNormalization()">Reset</button>
+            <button class="button button--secondary" onclick="loadNormalizationExample()">📋 Ejemplo</button>
+            <button class="button button--primary" onclick="analyzeNormalization()">Analizar</button>
+        </div>
+    </div>
+
+    <div id="norm-error" class="form-error" aria-live="polite"></div>
+
+    <div class="output-card" id="norm-output" hidden>
+        <div class="output-card__header">
+            <h3>Resultados</h3>
+            <p>Estado de 1FN, 2FN y 3FN con explicaciones y sugerencias.</p>
+        </div>
+
+        <div id="norm-results" class="normalization-results"></div>
+
+        <div class="panel__footer panel__footer--space">
+            <button class="button button--secondary" onclick="copyNormalizationResult()" id="copy-norm-btn">📋 Copiar Análisis</button>
+            <button class="button button--secondary" onclick="downloadNormalizationReport()">💾 Descargar Texto</button>
+        </div>
+    </div>
+
+</section>
+{% endblock %}

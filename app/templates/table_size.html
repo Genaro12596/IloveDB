@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section section-page">
+    <div class="section__header">
+        <h2>Estimación de tamaño de tabla en base a columnas y registros.</h2>
+        <p class="section__subtitle">Define columnas, tipos y registros estimados para ver el tamaño aproximado en KB, MB y GB.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel__grid">
+            <div class="panel__field panel__field--full">
+                <label class="field-label" for="rows-count">Cantidad estimada de registros</label>
+                <input id="rows-count" type="number" min="1" step="1" class="input" placeholder="ej. 10000" value="1000" />
+            </div>
+        </div>
+
+        <div class="panel__body table-size-body">
+            <div class="table-size-header">
+                <span>Columnas</span>
+                <button type="button" class="button button--secondary" onclick="addTableColumnRow()">Agregar columna</button>
+            </div>
+            <div id="columns-container" class="table-size-grid"></div>
+        </div>
+
+        <div class="panel__footer panel__footer--space">
+            <button type="button" onclick="resetTableSize()" class="button button--secondary">Reset</button>
+            <button type="button" onclick="loadTableSizeExample()" class="button button--secondary">📋 Ejemplo</button>
+            <button type="button" onclick="calculateTableSize()" class="button button--primary">Calcular tamaño</button>
+        </div>
+    </div>
+
+    <div id="table-size-error" class="form-error" aria-live="polite"></div>
+
+    <div class="output-card" id="table-size-output" hidden>
+        <div class="output-card__header">
+            <h3>Resultado estimado</h3>
+            <p>Revisa el total y el desglose por columna para entender tu tabla.</p>
+        </div>
+        <div class="table-size-summary">
+            <div>
+                <strong id="summary-rows">Registros:</strong>
+            </div>
+            <div>
+                <strong id="summary-row-size">Tamaño por fila:</strong>
+            </div>
+            <div>
+                <strong id="summary-total-size">Tamaño total:</strong>
+            </div>
+        </div>
+        <div class="table-size-breakdown" id="table-size-breakdown"></div>
+        <div class="panel__footer panel__footer--space">
+            <button type="button" onclick="copyTableSizeResult()" class="button button--secondary">📋 Copiar Tabla</button>
+            <button type="button" onclick="downloadTableSizeCSV()" class="button button--secondary">💾 Descargar CSV</button>
+        </div>
+    </div>
+</section>
+{% endblock %}

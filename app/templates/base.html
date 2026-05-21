@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iLoveBD · SQL Tools Platform</title>
+    <meta name="description" content="iLoveBD - Plataforma profesional para herramientas SQL. Formatea SQL, convierte CSV, genera consultas, optimiza bases de datos.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" defer></script>
+</head>
+<body class="app-shell">
+    <!-- Main Navigation -->
+    <nav class="topbar" role="navigation" aria-label="Navegación principal">
+        <div class="topbar__inner container">
+            <a href="/" class="brand" aria-label="iLoveBD - Volver al inicio">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="iLoveBD logo" class="brand__logo" />
+                <span class="brand__text">iLoveBD</span>
+            </a>
+
+            <button id="mobile-menu-toggle" class="menu-toggle" type="button" aria-label="Alternar menú" aria-expanded="false" aria-controls="nav-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="nav-links" id="nav-menu">
+                <a href="/formatter" class="nav-link">Formateador SQL</a>
+                <a href="/csv-to-sql" class="nav-link">CSV → SQL</a>
+                <a href="/generator" class="nav-link">Generador SQL</a>
+                <a href="/table-size" class="nav-link">Calculadora de Tablas</a>
+                <a href="/normalization" class="nav-link">Normalización</a>
+                <a href="/optimizer" class="nav-link">SQL Optimizer</a>
+            </div>
+
+            <div class="topbar__actions">
+                <button id="theme-toggle" class="btn btn--tertiary btn--sm" type="button" aria-label="Cambiar tema">
+                    <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="page-content">
+        <div class="container page-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Toast Container (para notificaciones) -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
