@@ -9,21 +9,9 @@
 
     <div class="panel">
         <div class="panel__grid">
-            <div class="panel__field">
-                <label class="field-label">Nombre de tabla</label>
-                <input id="norm-table" class="input" placeholder="ej. orders" />
-            </div>
-            <div class="panel__field">
-                <label class="field-label">Columnas (coma-separadas)</label>
-                <input id="norm-columns" class="input" placeholder="id, user_id, product_id, qty, total" />
-            </div>
-            <div class="panel__field">
-                <label class="field-label">Claves primarias (coma-separadas)</label>
-                <input id="norm-pk" class="input" placeholder="id" />
-            </div>
             <div class="panel__field panel__field--full">
-                <label class="field-label">Dependencias funcionales (una por línea, ex: A,B->C)</label>
-                <textarea id="norm-fds" class="input input--textarea" placeholder="A->B\nuser_id->user_name"></textarea>
+                <label class="field-label" for="sql-input">Pega tu script CREATE TABLE</label>
+                <textarea id="sql-input" class="input input--textarea" placeholder="CREATE TABLE ordenes ( orden_id INT PRIMARY KEY, cliente_id INT, cliente_nombre VARCHAR(50) );"></textarea>
             </div>
         </div>
 

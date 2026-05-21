@@ -30,12 +30,12 @@ function showCsvError(message) {
 }
 
 async function convertCSV() {
-    const csv = (document.getElementById("csv-input").value || "").trim();
+    const csvData = (document.getElementById("csv-input").value || "").trim();
     const table_name = (document.getElementById("table-name").value || "").trim();
 
     showCsvError("");
 
-    if (!table_name || !csv) {
+    if (!table_name || !csvData) {
         showCsvError("Datos incompletos: indica el nombre de la tabla y el contenido CSV antes de convertir.");
         return;
     }
@@ -46,8 +46,8 @@ async function convertCSV() {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            csv,
-            table_name
+            table_name,
+            csv_data: csvData
         })
     });
 
@@ -169,18 +169,12 @@ function removeTableColumnRow(button) {
 
 function getTableSizePayload() {
     const rowsInput = document.getElementById("rows-count");
-    const container = document.getElementById("columns-container");
-    if (!rowsInput || !container) return null;
-
-    const columns = Array.from(container.querySelectorAll(".table-size-row")).map(row => ({
-        name: row.querySelector(".column-name").value,
-        type: row.querySelector(".column-type").value,
-        size: row.querySelector(".column-size").value.trim() || null,
-    }));
+    const sqlInput = document.getElementById("sql-input");
+    if (!rowsInput || !sqlInput) return null;
 
     return {
         rows: rowsInput.value,
-        columns,
+        create_table_sql: sqlInput.value,
     };
 }
 
@@ -202,14 +196,14 @@ function renderTableSizeResult(data) {
     if (!output || !breakdown || !rowsSummary || !rowSizeSummary || !totalSizeSummary) return;
 
     rowsSummary.textContent = `Registros: ${data.rows.toLocaleString()}`;
-    rowSizeSummary.textContent = `Tamaño por fila: ${data.row_size.bytes} (${data.row_size.kb})`;
-    totalSizeSummary.textContent = `Tamaño total: ${data.total_size.mb} (${data.total_size.gb})`;
+    rowSizeSummary.textContent = `Tamaño por fila: ${data.row_size.formatted}`;
+    totalSizeSummary.textContent = `Tamaño total: ${data.total_size.formatted}`;
 
     breakdown.innerHTML = data.columns.map(col => `
         <div class="table-size-row-result">
             <div><strong>${col.name}</strong></div>
             <div>${col.type}</div>
-            <div>${col.display_size}</div>
+            <div>${col.formatted_size}</div>
         </div>
     `).join("");
 
@@ -238,15 +232,27 @@ async function calculateTableSize() {
 
 function resetTableSize() {
     const rowsInput = document.getElementById("rows-count");
-    const container = document.getElementById("columns-container");
+    const sqlInput = document.getElementById("sql-input");
     const output = document.getElementById("table-size-output");
     if (rowsInput) rowsInput.value = 1000;
-    if (!container) return;
-
-    container.innerHTML = "";
-    container.appendChild(createTableSizeRow());
+    if (sqlInput) sqlInput.value = "";
     showTableSizeError("");
     if (output) output.hidden = true;
+}
+
+function loadTableSizeExample() {
+    const sqlInput = document.getElementById("sql-input");
+    const rowsInput = document.getElementById("rows-count");
+    if (sqlInput) {
+        sqlInput.value = `CREATE TABLE usuarios (
+    id INT PRIMARY KEY,
+    nombre VARCHAR(100),
+    email VARCHAR(100),
+    fecha_registro DATE,
+    activo BOOLEAN
+);`;
+    }
+    if (rowsInput) rowsInput.value = 5000;
 }
 
 async function copyTableSizeResult() {
@@ -263,31 +269,27 @@ async function copyTableSizeResult() {
 }
 
 function downloadTableSizeCSV() {
-    const rowsInput = document.getElementById("rows-count");
-    const container = document.getElementById("columns-container");
-    
-    if (!rowsInput || !container) {
+    const output = document.getElementById("table-size-output");
+    if (!output) {
         showWarning('Advertencia', 'No hay datos para descargar');
         return;
     }
 
-    const rows = Array.from(container.querySelectorAll(".table-size-row-result"));
-    if (rows.length === 0) {
-        showWarning('Advertencia', 'Ejecuta el cálculo primero');
-        return;
-    }
-
-    const rowsCount = document.getElementById("summary-rows")?.textContent || "";
-    const rowSize = document.getElementById("summary-row-size")?.textContent || "";
-    const totalSize = document.getElementById("summary-total-size")?.textContent || "";
-
-    const header = "Nombre,Tipo,Tamaño\n";
-    const data = Array.from(container.querySelectorAll(".table-size-row-result")).map(row => {
+    const rowsText = document.getElementById("summary-rows")?.textContent || "";
+    const rowSizeText = document.getElementById("summary-row-size")?.textContent || "";
+    const totalSizeText = document.getElementById("summary-total-size")?.textContent || "";
+    const breakdownRows = Array.from(document.querySelectorAll(".table-size-row-result")).map(row => {
         const cells = Array.from(row.querySelectorAll('div')).map(el => el.textContent.trim());
         return cells.join(',');
     }).join('\n');
 
-    const fullCSV = `${header}${data}\n\nResumen:\n${rowsCount}\n${rowSize}\n${totalSize}`;
+    if (!breakdownRows) {
+        showWarning('Advertencia', 'Ejecuta el cálculo primero');
+        return;
+    }
+
+    const header = "Nombre,Tipo,Tamaño\n";
+    const fullCSV = `${header}${breakdownRows}\n\nResumen:\n${rowsText}\n${rowSizeText}\n${totalSizeText}`;
     downloadFile(fullCSV, 'table_size_analysis.csv', 'text/csv');
 }
 
@@ -302,105 +304,73 @@ function showNormalizationError(message) {
 }
 
 function resetNormalization() {
-    const tableInput = document.getElementById("norm-table");
-    const columnsInput = document.getElementById("norm-columns");
-    const pkInput = document.getElementById("norm-pk");
-    const fdsInput = document.getElementById("norm-fds");
+    const sqlInput = document.getElementById("sql-input");
     const output = document.getElementById("norm-output");
     const results = document.getElementById("norm-results");
 
-    if (tableInput) tableInput.value = "";
-    if (columnsInput) columnsInput.value = "";
-    if (pkInput) pkInput.value = "";
-    if (fdsInput) fdsInput.value = "";
+    if (sqlInput) sqlInput.value = "";
     if (results) results.innerHTML = "";
     if (output) output.hidden = true;
 
     showNormalizationError("");
 }
 
-function parseNormalizationInput() {
-    const table = document.getElementById("norm-table")?.value.trim() || "";
-    const columns = (document.getElementById("norm-columns")?.value || "").split(",").map(col => col.trim()).filter(Boolean);
-    const primaryKeys = (document.getElementById("norm-pk")?.value || "").split(",").map(col => col.trim()).filter(Boolean);
-    const fds = (document.getElementById("norm-fds")?.value || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+function loadNormalizationExample() {
+    const sqlInput = document.getElementById("sql-input");
+    if (!sqlInput) return;
 
-    return { table, columns, primaryKeys, fds };
+    sqlInput.value = `CREATE TABLE ordenes ( orden_id INT PRIMARY KEY, cliente_id INT, cliente_nombre VARCHAR(50), cliente_direccion VARCHAR(100), producto_id INT, producto_nombre VARCHAR(50) );`;
 }
 
-function evaluateNormalization({ table, columns, primaryKeys, fds }) {
-    const results = [];
-    const validColumns = new Set(columns.map(col => col.toLowerCase()));
-    const keySet = new Set(primaryKeys.map(col => col.toLowerCase()));
-    const parsedFDs = [];
+function parseNormalizationInput() {
+    return {
+        create_table_sql: (document.getElementById("sql-input")?.value || "").trim(),
+    };
+}
 
-    for (const line of fds) {
-        const match = line.match(/^(.+)->(.+)$/);
-        if (!match) {
-            continue;
-        }
-
-        const left = match[1].split(",").map(item => item.trim().toLowerCase()).filter(Boolean);
-        const right = match[2].split(",").map(item => item.trim().toLowerCase()).filter(Boolean);
-        if (!left.length || !right.length) continue;
-
-        parsedFDs.push({ left, right });
+function analyzeNormalization() {
+    const payload = parseNormalizationInput();
+    if (!payload.create_table_sql) {
+        showNormalizationError("Pega el script CREATE TABLE antes de analizar.");
+        return;
     }
 
-    const is1NF = table && columns.length > 0 && primaryKeys.length > 0;
-    results.push({
-        title: "1FN",
-        status: is1NF ? "Cumple" : "No cumple",
-        detail: is1NF
-            ? "Tiene identificador y columnas definidas, por lo tanto cumple condiciones básicas de 1FN."
-            : "Debes indicar nombre de tabla, columnas y claves primarias para evaluar correctamente 1FN."
-    });
+    fetch("/api/normalization", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    })
+        .then(response => response.json())
+        .then(data => {
+            const resultsElement = document.getElementById("norm-results");
+            const output = document.getElementById("norm-output");
 
-    let partialDependency = false;
-    const compositeKey = primaryKeys.length > 1;
-
-    if (parsedFDs.length) {
-        for (const fd of parsedFDs) {
-            const leftIsKeyPart = fd.left.every(attr => keySet.has(attr));
-            const rightIsNonKey = fd.right.some(attr => !keySet.has(attr));
-            if (compositeKey && leftIsKeyPart && rightIsNonKey && fd.left.length < primaryKeys.length) {
-                partialDependency = true;
+            if (!resultsElement || !output) return;
+            if (data.error) {
+                showNormalizationError(data.error);
+                return;
             }
-        }
-    }
 
-    const is2NF = is1NF && !partialDependency;
-    results.push({
-        title: "2FN",
-        status: is2NF ? "Cumple" : "No cumple",
-        detail: is2NF
-            ? "No se encontraron dependencias parciales sobre la clave primaria compuesta."
-            : compositeKey
-                ? "Se detectaron dependencias parciales en una clave primaria compuesta. Separar atributos en nuevas tablas mejorará 2FN."
-                : "Con clave primaria simple, 2FN se satisface si no hay dependencias parciales."
-    });
-
-    let transitiveDependency = false;
-    for (const fd of parsedFDs) {
-        if (!fd.left.every(attr => keySet.has(attr))) {
-            const rightNonKey = fd.right.some(attr => !keySet.has(attr));
-            if (rightNonKey) {
-                transitiveDependency = true;
-                break;
-            }
-        }
-    }
-
-    const is3NF = is2NF && !transitiveDependency;
-    results.push({
-        title: "3FN",
-        status: is3NF ? "Cumple" : "No cumple",
-        detail: is3NF
-            ? "No se encontraron dependencias transitivas relevantes."
-            : "Hay dependencias transitivas o atributos no clave que dependen de otros atributos no clave. Revisar el diseño con más tablas."
-    });
-
-    return { results, parsedFDs };
+            const result = data.result;
+            resultsElement.innerHTML = [
+                { title: '1FN', status: result['1fn'].status, detail: result['1fn'].detail },
+                { title: '2FN', status: result['2fn'].status, detail: result['2fn'].detail },
+                { title: '3FN', status: result['3fn'].status, detail: result['3fn'].detail }
+            ].map(item => {
+                const statusClass = item.status === 'CUMPLE' ? 'normalization-result-status--cumple' : 'normalization-result-status--no-cumple';
+                return `
+                    <div class="normalization-result-row">
+                        <div class="normalization-result-status ${statusClass}">${item.status}</div>
+                        <div class="normalization-result-detail"><strong>${item.title}</strong><br />${item.detail}</div>
+                    </div>
+                `;
+            }).join('');
+            output.hidden = false;
+            showNormalizationError("");
+        })
+        .catch(() => {
+            showNormalizationError('Error al comunicarse con el servidor. Intenta de nuevo.');
+        });
 }
 
 function formatNormalizationOutput(evaluation) {
@@ -415,25 +385,6 @@ function formatNormalizationOutput(evaluation) {
         </div>
     `;
     }).join("");
-}
-
-function analyzeNormalization() {
-    const payload = parseNormalizationInput();
-
-    if (!payload.table || !payload.columns.length || !payload.primaryKeys.length) {
-        showNormalizationError("Completa el nombre de tabla, las columnas y las claves primarias antes de analizar.");
-        return;
-    }
-
-    const evaluation = evaluateNormalization(payload);
-    const resultsElement = document.getElementById("norm-results");
-    const output = document.getElementById("norm-output");
-
-    if (!resultsElement || !output) return;
-
-    resultsElement.innerHTML = formatNormalizationOutput(evaluation);
-    output.hidden = false;
-    showNormalizationError("");
 }
 
 async function copyNormalizationResult() {
