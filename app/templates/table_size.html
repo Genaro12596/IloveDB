@@ -13,14 +13,10 @@
                 <label class="field-label" for="rows-count">Cantidad estimada de registros</label>
                 <input id="rows-count" type="number" min="1" step="1" class="input" placeholder="ej. 10000" value="1000" />
             </div>
-        </div>
-
-        <div class="panel__body table-size-body">
-            <div class="table-size-header">
-                <span>Columnas</span>
-                <button type="button" class="button button--secondary" onclick="addTableColumnRow()">Agregar columna</button>
+            <div class="panel__field panel__field--full">
+                <label class="field-label" for="sql-input">Pega tu script CREATE TABLE</label>
+                <textarea id="sql-input" class="input input--textarea" rows="10" placeholder="CREATE TABLE usuarios (\n  id INT PRIMARY KEY,\n  nombre VARCHAR(100),\n  fecha_registro DATE\n);"></textarea>
             </div>
-            <div id="columns-container" class="table-size-grid"></div>
         </div>
 
         <div class="panel__footer panel__footer--space">
@@ -50,7 +46,7 @@
         </div>
         <div class="table-size-breakdown" id="table-size-breakdown"></div>
         <div class="panel__footer panel__footer--space">
-            <button type="button" onclick="copyTableSizeResult()" class="button button--secondary">📋 Copiar Tabla</button>
+            <button id="copy-table-btn" type="button" onclick="copyTableSizeResult()" class="button button--secondary">📋 Copiar Tabla</button>
             <button type="button" onclick="downloadTableSizeCSV()" class="button button--secondary">💾 Descargar CSV</button>
         </div>
     </div>

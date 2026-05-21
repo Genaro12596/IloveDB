@@ -3,96 +3,99 @@
 {% block content %}
 <section class="section section-page">
     <div class="section__header">
-        <h2>Genera consultas SQL en segundos.</h2>
-        <p class="section__subtitle">Define la tabla y columnas, y obtén SELECT listos para usar.</p>
+        <h2>Generador de CRUD Automatizado</h2>
+        <p class="section__subtitle">Pega tu CREATE TABLE y genera automáticamente INSERT, SELECT, UPDATE, DELETE.</p>
     </div>
 
     <div class="panel">
-        <div class="panel__grid">
-            <div class="panel__field">
-                <label class="field-label" for="table">Tabla</label>
-                <input id="table" class="input" placeholder="ej. usuarios" />
-            </div>
-            <div class="panel__field panel__field--full">
-                <label class="field-label" for="columns">Columnas</label>
-                <input id="columns" class="input" placeholder="id, nombre, email" />
-            </div>
+        <div class="panel__field panel__field--full">
+            <label class="field-label" for="sql-input">Pega tu script CREATE TABLE</label>
+            <textarea id="sql-input" class="input" placeholder="CREATE TABLE usuarios (...)" style="height: 120px; font-family: monospace;"></textarea>
         </div>
 
-        <div class="panel__footer">
-            <button onclick="generateSQL()" class="button button--primary">Generar SQL</button>
+        <div class="panel__footer" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button onclick="injectExample()" class="button button--secondary" style="flex: 1; min-width: 150px;">📋 Ejemplo</button>
+            <button onclick="generateCRUD()" class="button button--primary" style="flex: 1; min-width: 150px;">Generar CRUD</button>
         </div>
     </div>
 
     <div id="generator-error" class="form-error" aria-live="polite"></div>
 
-    <div class="output-card">
-        <div class="output-card__header">
-            <h3>Consulta generada</h3>
-            <p>Pega este SQL en tu editor o ejecútalo directamente en tu base de datos.</p>
-        </div>
-        <pre><code id="generator-result" class="language-sql"></code></pre>
-        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
-            <button id="copy-query-btn" onclick="handleCopyQueryGenerator()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                📋 Copiar Query
-            </button>
-            <button id="download-gen-sql-btn" onclick="handleDownloadGeneratorSQL()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                💾 Descargar SQL
-            </button>
-        </div>
+    <div id="crud-output" style="display: none; margin-top: 2rem;">
+        <div id="crud-create"></div>
+        <div id="crud-read"></div>
+        <div id="crud-update"></div>
+        <div id="crud-delete"></div>
     </div>
 </section>
+
 <script>
-async function generateSQL() {
-    const table = document.getElementById('table').value.trim();
-    const columns = document.getElementById('columns').value.trim();
+function injectExample() {
+    document.getElementById('sql-input').value = 'CREATE TABLE productos ( id INT PRIMARY KEY, nombre VARCHAR(100), precio DECIMAL(10,2), stock INT );';
+}
+
+async function generateCRUD() {
+    const sqlInput = document.getElementById('sql-input').value.trim();
+    const errorDiv = document.getElementById('generator-error');
     
-    if (!table || !columns) {
-        showWarning('Advertencia', 'Completa los campos requeridos');
+    if (!sqlInput) {
+        errorDiv.textContent = 'Pega un CREATE TABLE válido';
+        errorDiv.classList.add('form-error--visible');
         return;
     }
     
+    errorDiv.classList.remove('form-error--visible');
+    
     try {
-        const response = await fetch('/api/generate-sql', {
+        const response = await fetch('/api/generate-crud', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ table, columns })
+            body: JSON.stringify({ create_table_sql: sqlInput })
         });
         
         const data = await response.json();
         
         if (data.error) {
-            showError('Error', data.error);
+            errorDiv.textContent = data.error;
+            errorDiv.classList.add('form-error--visible');
             return;
         }
         
-        document.getElementById('generator-result').textContent = data.sql;
-        if (window.Prism) {
-            Prism.highlightElement(document.getElementById('generator-result'));
-        }
+        renderCRUDOutput(data);
         
     } catch (error) {
         console.error('Error:', error);
-        showError('Error', 'Error de conexión');
+        errorDiv.textContent = 'Error de conexión';
+        errorDiv.classList.add('form-error--visible');
     }
 }
 
-async function handleCopyQueryGenerator() {
-    const content = document.getElementById('generator-result').textContent;
-    if (!content) {
-        showWarning('Advertencia', 'No hay contenido para copiar');
-        return;
-    }
-    await copyToClipboard(content, 'copy-query-btn');
+function renderCRUDOutput(data) {
+    const output = document.getElementById('crud-output');
+    const operations = ['create', 'read', 'update', 'delete'];
+    const labels = { create: 'CREATE (INSERT)', read: 'READ (SELECT)', update: 'UPDATE', delete: 'DELETE' };
+    
+    operations.forEach(op => {
+        const div = document.getElementById(`crud-${op}`);
+        div.innerHTML = `
+            <div class="output-card">
+                <div class="output-card__header">
+                    <h3>${labels[op]}</h3>
+                </div>
+                <pre><code class="language-sql">${escapeHtml(data[op].sql)}</code></pre>
+                <p style="margin-top: 1rem; line-height: 1.6; color: #555;">${escapeHtml(data[op].explanation)}</p>
+                <button onclick="copyToClipboard('${escapeHtml(data[op].sql).replace(/'/g, "\\'")}', this)" class="button button--secondary" style="margin-top: 1rem;">📋 Copiar</button>
+            </div>
+        `;
+    });
+    
+    output.style.display = 'block';
+    if (window.Prism) Prism.highlightAllUnder(output);
 }
 
-async function handleDownloadGeneratorSQL() {
-    const content = document.getElementById('generator-result').textContent;
-    if (!content) {
-        showWarning('Advertencia', 'No hay contenido para descargar');
-        return;
-    }
-    downloadFile(content, 'query_generated.sql', 'text/sql');
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, c => map[c]);
 }
 </script>
 {% endblock %}

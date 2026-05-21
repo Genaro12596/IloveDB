@@ -1345,6 +1345,16 @@ body.dark .input {
     background: rgba(15, 23, 42, 0.82);
 }
 
+body.dark .button--secondary {
+    background: #2D3748;
+    color: #ffffff;
+    border-color: #4A5568;
+}
+
+body.dark .button--secondary:hover {
+    background: #3A4B5F;
+}
+
 /* Ensure results and code are readable in dark mode */
 body.dark pre,
 body.dark pre code,
@@ -1734,5 +1744,41 @@ body.dark .filter-pill:hover {
     .topbar__actions {
         order: 1;
         margin-left: auto;
+    
     }
+
+    /* Colores de los acentos visuales para el CRUD */
+.badge-title {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 700;
+    margin-right: 10px;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* El borde izquierdo de la tarjeta para que haga juego */
+.crud-card {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+
+/* Colores específicos según la operación */
+.crud-card.success { border-left-color: #10B981; } /* Verde para CREATE */
+.badge-title.success { background-color: #10B981; }
+
+.crud-card.info { border-left-color: #3B82F6; } /* Azul para READ */
+.badge-title.info { background-color: #3B82F6; }
+
+.crud-card.warning { border-left-color: #F59E0B; } /* Amarillo/Naranja para UPDATE */
+.badge-title.warning { background-color: #F59E0B; color: #111827; }
+
+.crud-card.danger { border-left-color: #EF4444; } /* Rojo para DELETE */
+.badge-title.danger { background-color: #EF4444; }
+
+
+
 }

@@ -49,13 +49,13 @@
     <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
         <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Ejemplos para probar:</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
-            <button onclick="loadExample('SELECT id,name,email FROM users WHERE status=\\'active\\' ORDER BY name;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+            <button id="example-select-btn" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
                 SELECT simple con WHERE
             </button>
-            <button onclick="loadExample('SELECT u.id,u.name,o.total FROM users u JOIN orders o ON u.id=o.user_id WHERE o.created_at>\\\"2024-01-01\\\" GROUP BY u.id;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+            <button id="example-join-btn" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
                 JOIN con GROUP BY
             </button>
-            <button onclick="loadExample('SELECT * FROM (SELECT id,name FROM users WHERE status=\\'active\\') t WHERE t.id IN (SELECT user_id FROM orders);')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+            <button id="example-subquery-btn" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
                 Subconsulta anidada
             </button>
         </div>
@@ -63,6 +63,18 @@
 </div>
 
 <script>
+const SQL_EXAMPLES = {
+    selectSimple: "select id,name,email from users where status='active' and created_at>'2024-01-01';",
+    joinGroupBy: "select d.department_name,count(e.id) as total_employees from employees e join departments d on e.department_id=d.id group by d.department_name;",
+    subquery: "select name,salary from employees where salary>(select avg(salary) from employees where department_id=10);",
+};
+
+function setExampleSql(sql) {
+    const input = document.getElementById("sql-input");
+    if (!input) return;
+    input.value = sql;
+}
+
 async function formatSQL() {
     const sql = document.getElementById("sql-input").value.trim();
     
@@ -102,9 +114,26 @@ function resetFormatter() {
 }
 
 function loadExample(sql) {
-    document.getElementById("sql-input").value = sql;
-    formatSQL();
+    setExampleSql(sql);
 }
+
+function initializeExampleButtons() {
+    const selectButton = document.getElementById('example-select-btn');
+    const joinButton = document.getElementById('example-join-btn');
+    const subqueryButton = document.getElementById('example-subquery-btn');
+
+    if (selectButton) {
+        selectButton.addEventListener('click', () => setExampleSql(SQL_EXAMPLES.selectSimple));
+    }
+    if (joinButton) {
+        joinButton.addEventListener('click', () => setExampleSql(SQL_EXAMPLES.joinGroupBy));
+    }
+    if (subqueryButton) {
+        subqueryButton.addEventListener('click', () => setExampleSql(SQL_EXAMPLES.subquery));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initializeExampleButtons);
 
 async function handleCopySQLFormatter() {
     const content = document.getElementById('formatted-result').textContent;
