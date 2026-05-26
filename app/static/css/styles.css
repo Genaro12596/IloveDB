@@ -1329,6 +1329,146 @@ body.dark {
     line-height: 1.5;
 }
 
+.normalization-summary-grid,
+.performance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.summary-card,
+.stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-xs);
+}
+
+.summary-card strong,
+.stat-card strong {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.summary-card span,
+.stat-card span {
+    display: block;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.normalization-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.normalization-section h4,
+.optimizer-section h4 {
+    margin: 0 0 0.9rem 0;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.normalization-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--text);
+}
+
+.normalization-list li {
+    margin-bottom: 0.65rem;
+    line-height: 1.7;
+}
+
+.dependency-card {
+    background: rgba(248, 250, 252, 0.95);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.85rem;
+}
+
+.dependency-card strong {
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.code-output {
+    margin: 0;
+    padding: 1rem;
+    background: rgba(249, 250, 251, 0.95);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.optimizer-issue-card {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+}
+
+.optimizer-issue-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    cursor: pointer;
+}
+
+.optimizer-issue-title {
+    font-weight: 700;
+    color: var(--text);
+}
+
+.optimizer-issue-description,
+.optimizer-issue-suggestion {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.optimizer-issue-details {
+    display: none;
+    padding: 0.85rem;
+    margin-top: 0.85rem;
+    border-radius: var(--radius-md);
+    background: rgba(249, 250, 251, 0.96);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.optimizer-issue-details p {
+    margin: 0.5rem 0;
+}
+
+.optimizer-issue-example {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.85rem;
+    border-radius: 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 780px) {
+    .normalization-summary-grid,
+    .performance-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
 pre {
     margin: 0;
     border-radius: 24px;
@@ -1343,6 +1483,37 @@ body.dark .output-card,
 body.dark pre,
 body.dark .input {
     background: rgba(15, 23, 42, 0.82);
+}
+
+body.dark .summary-card,
+body.dark .stat-card,
+body.dark .dependency-card,
+body.dark .optimizer-issue-card,
+body.dark .code-output {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .summary-card strong,
+body.dark .stat-card strong,
+body.dark .dependency-card strong,
+body.dark .optimizer-issue-title,
+body.dark .normalization-list,
+body.dark .normalization-result-detail,
+body.dark .optimizer-issue-description,
+body.dark .optimizer-issue-suggestion,
+body.dark .optimizer-issue-details,
+body.dark .optimizer-issue-example {
+    color: var(--text);
+}
+
+body.dark .optimizer-issue-details {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+body.dark .optimizer-issue-example {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 body.dark .button--secondary {

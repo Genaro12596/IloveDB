@@ -39,10 +39,12 @@ class SQLOptimizer:
     def __init__(self, sql: str):
         self.sql = sql.strip()
         self.issues: List[SQLOptimization] = []
+        self.metrics: Dict[str, int] = {}
     
     def analyze(self) -> Dict:
         """Analiza la consulta y retorna resultados"""
         self.issues = []
+        self.metrics = self._extract_metrics()
         
         if not self.sql:
             return {
@@ -60,18 +62,28 @@ class SQLOptimizer:
         self._check_missing_limit()
         self._check_multiple_joins()
         self._check_correlated_subqueries()
-        self._check_distinct_usage()  # NUEVA
-        self._check_distinct_with_select_star()  # NUEVA
-        self._check_index_unfriendly_patterns()  # NUEVA
-        self._check_missing_table_alias()  # NUEVA
-        self._check_cartesian_product_risk()  # NUEVA
-        self._check_null_comparisons()  # NUEVA
-        self._check_implicit_type_conversion()  # NUEVA
+        self._check_distinct_usage()
+        self._check_distinct_with_select_star()
+        self._check_index_unfriendly_patterns()
+        self._check_missing_table_alias()
+        self._check_cartesian_product_risk()
+        self._check_null_comparisons()
+        self._check_implicit_type_conversion()
+        self._check_order_by_without_limit()
+        self._check_redundant_conditions()
+        self._check_unsafe_dml_without_where()
+        self._check_unnecessary_join_pattern()
+        self._check_complex_query()
         
         # Ordenar por severidad
         severity_order = {'error': 0, 'warning': 1, 'info': 2}
         self.issues.sort(key=lambda x: severity_order.get(x.severity, 3))
         
+        score = self._calculate_efficiency_score()
+        performance_estimate = self._estimate_performance(score)
+        complexity = self._describe_complexity()
+        recommendations = self._compile_recommendations()
+
         return {
             'success': True,
             'query': self.sql,
@@ -91,6 +103,11 @@ class SQLOptimizer:
             'critical_count': sum(1 for i in self.issues if i.severity == 'error'),
             'warning_count': sum(1 for i in self.issues if i.severity == 'warning'),
             'info_count': sum(1 for i in self.issues if i.severity == 'info'),
+            'efficiency_score': score,
+            'performance_estimate': performance_estimate,
+            'complexity': complexity,
+            'recommendations': recommendations,
+            'metrics': self.metrics,
         }
     
     def _check_full_table_scan(self):
@@ -316,6 +333,144 @@ class SQLOptimizer:
                 example='// Cuidado: WHERE id = "123" (si id es INT)\n// Mejor: WHERE id = 123',
                 impact='Puede evitar índices'
             ))
+
+    def _check_order_by_without_limit(self):
+        """Detecta ORDER BY sin LIMIT"""
+        if re.search(r'(?i)ORDER\s+BY', self.sql) and not re.search(r'(?i)LIMIT', self.sql):
+            if not re.search(r'(?i)GROUP\s+BY', self.sql):
+                self.issues.append(SQLOptimization(
+                    'order_by_without_limit',
+                    'warning',
+                    '💡 ORDER BY sin LIMIT',
+                    'ORDER BY sin LIMIT puede generar grandes costos de ordenamiento en memoria.',
+                    'Agrega LIMIT y paginación: LIMIT 100 OFFSET 0',
+                    example='// Mejor: SELECT id, name FROM users ORDER BY created_at DESC LIMIT 100',
+                    impact='Ordenamiento costoso en grandes conjuntos'
+                ))
+
+    def _check_redundant_conditions(self):
+        """Detecta condiciones redundantes"""
+        if re.search(r'(?i)\bAND\s+1\s*=\s*1\b|\bOR\s+1\s*=\s*1\b', self.sql) or re.search(r'(?i)\b(\w+)\s*=\s*\1\b', self.sql):
+            self.issues.append(SQLOptimization(
+                'redundant_conditions',
+                'info',
+                '💡 Condiciones redundantes detectadas',
+                'Algunas condiciones de filtro no aportan valor y saturan el plan de ejecución.',
+                'Revisa la cláusula WHERE y elimina comparaciones redundantes.',
+                example='// Malo: WHERE status = status AND 1 = 1\n// Mejor: WHERE status = "active"',
+                impact='Podría complicar el optimizador de consultas'
+            ))
+
+    def _check_unsafe_dml_without_where(self):
+        """Detecta UPDATE/DELETE sin WHERE"""
+        sql_trimmed = self.sql.strip()
+        if re.search(r'(?i)^(UPDATE|DELETE)\s+.+$', sql_trimmed) and not re.search(r'(?i)\bWHERE\b', sql_trimmed):
+            self.issues.append(SQLOptimization(
+                'unsafe_dml',
+                'error',
+                '❌ UPDATE/DELETE sin WHERE',
+                'Actualizar o borrar sin WHERE puede modificar o eliminar todas las filas de la tabla.',
+                'Agrega una condición WHERE clara antes de ejecutar operaciones destructivas.',
+                example='// Malo: DELETE FROM users\n// Mejor: DELETE FROM users WHERE active = 0',
+                impact='Puede causar pérdida de datos masiva'
+            ))
+
+    def _check_unnecessary_join_pattern(self):
+        """Detecta JOINs difíciles de optimizar"""
+        join_count = len(re.findall(r'(?i)JOIN', self.sql))
+        if join_count >= 2 and not re.search(r'(?i)JOIN\s+\w+\s+ON', self.sql):
+            self.issues.append(SQLOptimization(
+                'join_without_on',
+                'warning',
+                '💡 JOIN sin ON detectado',
+                'Algunos JOINs no tienen una condición ON clara, lo que puede indicar un producto cartesiano o ambigüedad.',
+                'Asegura que cada JOIN incluya una condición ON específica.',
+                example='// Malo: FROM users JOIN orders\n// Mejor: FROM users JOIN orders ON users.id = orders.user_id',
+                impact='Puede causar combinaciones innecesarias de filas'
+            ))
+
+    def _check_complex_query(self):
+        """Mide la complejidad de la consulta"""
+        join_count = len(re.findall(r'(?i)JOIN', self.sql))
+        subquery_count = len(re.findall(r'(?i)\(\s*SELECT', self.sql))
+        if join_count >= 3 or subquery_count >= 2:
+            self.issues.append(SQLOptimization(
+                'complex_query',
+                'info',
+                '💡 Consulta compleja detectada',
+                'Esta consulta contiene múltiples JOINs o subconsultas que aumentan su complejidad.',
+                'Revisa si puedes dividir la consulta en pasos más simples o usar vistas.',
+                example='// Consulta compleja con muchos JOINs y subconsultas',
+                impact='Puede aumentar el tiempo de ejecución y dificultar mantenimiento'
+            ))
+
+    def _extract_metrics(self):
+        """Extrae métricas clave para calificar la consulta"""
+        query = self.sql.upper()
+        join_count = len(re.findall(r'JOIN', query))
+        subquery_count = len(re.findall(r'\(\s*SELECT', query))
+        return {
+            'length': len(self.sql),
+            'join_count': join_count,
+            'subquery_count': subquery_count,
+            'has_where': bool(re.search(r'\bWHERE\b', query)),
+            'has_limit': bool(re.search(r'\bLIMIT\b', query)),
+            'has_order_by': bool(re.search(r'\bORDER\s+BY\b', query)),
+            'has_distinct': bool(re.search(r'\bDISTINCT\b', query)),
+            'has_group_by': bool(re.search(r'\bGROUP\s+BY\b', query)),
+        }
+
+    def _calculate_efficiency_score(self):
+        """Calcula un puntaje de eficiencia basado en las detecciones"""
+        score = 100
+        for issue in self.issues:
+            if issue.severity == 'error':
+                score -= 25
+            elif issue.severity == 'warning':
+                score -= 12
+            else:
+                score -= 5
+        score -= max(0, self.metrics.get('join_count', 0) - 1) * 3
+        score -= max(0, self.metrics.get('subquery_count', 0) - 1) * 4
+        score = max(15, min(100, score))
+        return score
+
+    def _estimate_performance(self, score: int) -> str:
+        """Genera una estimación de rendimiento en lenguaje natural"""
+        if score >= 85:
+            return 'Alta eficiencia esperada'
+        if score >= 70:
+            return 'Buen rendimiento, revisar detalles menores'
+        if score >= 50:
+            return 'Rendimiento moderado, hay optimizaciones importantes'
+        return 'Rendimiento crítico, requiere ajustes urgentes'
+
+    def _describe_complexity(self) -> str:
+        """Describe la complejidad de la consulta"""
+        joins = self.metrics.get('join_count', 0)
+        subqueries = self.metrics.get('subquery_count', 0)
+        if joins >= 3 or subqueries >= 2:
+            return 'Alta'
+        if joins == 2 or subqueries == 1:
+            return 'Media'
+        return 'Baja'
+
+    def _compile_recommendations(self) -> List[str]:
+        """Genera recomendaciones clave en una lista legible"""
+        recommendations = []
+        if not self.metrics.get('has_where') and re.search(r'(?i)^SELECT', self.sql):
+            recommendations.append('Agrega cláusulas WHERE específicas para evitar full table scans.')
+        if self.metrics.get('has_order_by') and not self.metrics.get('has_limit'):
+            recommendations.append('Aplica LIMIT/OFFSET cuando uses ORDER BY en consultas de listado.')
+        if self.metrics.get('has_distinct') and not self.metrics.get('has_group_by'):
+            recommendations.append('Revisa el uso de DISTINCT; puede ser más eficiente un GROUP BY o una subconsulta mejor definida.')
+        if self.metrics.get('join_count', 0) >= 2:
+            recommendations.append('Verifica que cada JOIN tenga ON correcto y que no traigas tablas innecesarias.')
+        if self.metrics.get('subquery_count', 0) >= 1:
+            recommendations.append('Evalúa si las subconsultas pueden reescribirse como JOINs o vistas materializadas.')
+        if not recommendations:
+            recommendations.append('La consulta parece sólida, pero revisa el plan de ejecución para confirmar.')
+        return recommendations
 
 
 def optimize_sql(sql: str) -> Dict:

@@ -20,25 +20,55 @@
             <textarea 
                 id="optimizer-input" 
                 style="width: 100%; min-height: 12rem; padding: 0.875rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); font-family: monospace; font-size: 0.9rem; resize: vertical;"
-                placeholder="SELECT * FROM usuarios WHERE nombre LIKE '%juan%';"
+                placeholder="SELECT o.order_id, c.name, p.product_name, o.total_amount FROM orders o JOIN customers c ON o.customer_id = c.customer_id JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON oi.product_id = p.product_id WHERE c.region = 'LATAM' AND p.name LIKE '%wireless%' ORDER BY o.order_date DESC;"
             ></textarea>
 
-            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                <button onclick="analyzeSQL()" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+                <button onclick="analyzeSQL()" style="flex: 1; min-width: 140px; padding: 0.75rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                     Analizar
                 </button>
-                <button onclick="resetOptimizer()" style="flex: 0.5; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer;">
+                <button onclick="loadQuickExample()" style="flex: 0.75; min-width: 150px; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer;">
+                    Cargar ejemplo
+                </button>
+                <button onclick="resetOptimizer()" style="flex: 0.75; min-width: 120px; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer;">
                     Limpiar
                 </button>
             </div>
         </div>
 
         <!-- Results Section -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
+        <div class="panel output-card">
             <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">Resultados</h2>
-            <p style="margin: 0 0 1rem 0; color: var(--muted); font-size: 0.9rem;" id="analysis-summary">Aquí aparecerán los resultados</p>
-
-            <div id="optimizer-results" style="max-height: 18rem; overflow-y: auto;">
+            <p style="margin: 0 0 0.5rem 0; color: var(--muted); font-size: 0.9rem;" id="analysis-summary">Aquí aparecerán los resultados</p>
+            <div id="performance-summary" class="performance-summary">
+                <div class="stat-card">
+                    <strong>Puntuación</strong>
+                    <div id="optimizer-score" style="font-size:1.4rem; font-weight:800; margin-top:0.5rem; color: var(--accent);">--</div>
+                </div>
+                <div class="stat-card">
+                    <strong>Estimación</strong>
+                    <div id="optimizer-estimate" style="margin-top:0.5rem; color: var(--text);">--</div>
+                </div>
+            </div>
+            <div id="optimizer-metrics" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1rem;">
+                <div class="stat-card">
+                    <strong>Complejidad</strong>
+                    <div id="optimizer-complexity" style="margin-top:0.5rem; color: var(--text);">--</div>
+                </div>
+                <div class="stat-card">
+                    <strong>JOINs</strong>
+                    <div id="optimizer-joins" style="margin-top:0.5rem; color: var(--text);">--</div>
+                </div>
+                <div class="stat-card">
+                    <strong>Subconsultas</strong>
+                    <div id="optimizer-subqueries" style="margin-top:0.5rem; color: var(--text);">--</div>
+                </div>
+                <div class="stat-card">
+                    <strong>Recomendaciones</strong>
+                    <div id="optimizer-recommendation-count" style="margin-top:0.5rem; color: var(--text);">--</div>
+                </div>
+            </div>
+            <div id="optimizer-results" class="optimizer-results" style="max-height: 18rem; overflow-y: auto;">
                 <div style="text-align: center; color: var(--muted); padding: 2rem;">
                     <p>👆 Ingresa una consulta SQL y haz clic en "Analizar"</p>
                 </div>
@@ -54,18 +84,25 @@
         </div>
     </div>
 
+    <!-- History & Insights Section -->
+    <div id="optimizer-history" style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Historial rápido</h3>
+        <p style="margin: 0 0 1rem 0; color: var(--muted); font-size: 0.9rem;">Revisa los últimos análisis ejecutados en esta sesión.</p>
+        <div id="history-list" style="display: grid; gap: 0.75rem;"></div>
+    </div>
+
     <!-- Examples Section -->
     <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
         <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Ejemplos para probar:</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
-            <button onclick="loadExample('SELECT * FROM usuarios;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
-                Full Table Scan
+            <button onclick="loadExample('SELECT o.order_id, c.name, SUM(oi.quantity) AS total_items, o.total_amount FROM orders o JOIN customers c ON o.customer_id = c.customer_id JOIN order_items oi ON oi.order_id = o.order_id WHERE o.order_date >= \'2025-01-01\' AND c.region = \'LATAM\' GROUP BY o.order_id, c.name ORDER BY total_items DESC;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                JOIN Complejo
             </button>
             <button onclick="loadLikeExample()" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
-                LIKE con %
+                LIKE y ORDER BY
             </button>
-            <button onclick="loadExample('SELECT * FROM orders WHERE id NOT IN (SELECT order_id FROM returns);')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
-                NOT IN Problemático
+            <button onclick="loadExample('SELECT o.order_id, c.name, p.product_name FROM orders o JOIN customers c ON o.customer_id = c.customer_id JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON oi.product_id = p.product_id WHERE p.category_id = 5 AND o.status IN (\'completed\', \'shipped\') ORDER BY o.order_date DESC;')" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
+                JOIN + ORDER BY
             </button>
         </div>
     </div>
@@ -105,46 +142,68 @@ async function analyzeSQL() {
 function displayResults(data) {
     const resultsContainer = document.getElementById('optimizer-results');
     const summary = document.getElementById('analysis-summary');
-    
+    const scoreElement = document.getElementById('optimizer-score');
+    const estimateElement = document.getElementById('optimizer-estimate');
+    const complexityElement = document.getElementById('optimizer-complexity');
+    const joinsElement = document.getElementById('optimizer-joins');
+    const subqueriesElement = document.getElementById('optimizer-subqueries');
+    const recommendationCountElement = document.getElementById('optimizer-recommendation-count');
+
     const criticals = data.critical_count || 0;
     const warnings = data.warning_count || 0;
     const infos = data.info_count || 0;
     summary.textContent = `🔴 ${criticals} críticos, 🟡 ${warnings} advertencias, 🔵 ${infos} info`;
-    
+    scoreElement.textContent = data.efficiency_score != null ? `${data.efficiency_score}%` : '--';
+    estimateElement.textContent = data.performance_estimate ? `Rendimiento estimado: ${data.performance_estimate}` : '--';
+    complexityElement.textContent = data.complexity || '--';
+    joinsElement.textContent = data.metrics ? data.metrics.join_count : '--';
+    subqueriesElement.textContent = data.metrics ? data.metrics.subquery_count : '--';
+    recommendationCountElement.textContent = data.recommendations ? data.recommendations.length : '0';
+
     if (!data.issues || data.issues.length === 0) {
         resultsContainer.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text);"><strong>✅ Sin problemas detectados</strong></div>';
+        saveHistory(data);
+        renderHistory();
         return;
     }
-    
+
     const html = data.issues.map((issue, idx) => {
         const severityColors = {
             'error': 'var(--error)',
             'warning': 'var(--warning)',
             'info': 'var(--info)'
         };
-        
-        const severityBg = {
-            'error': 'var(--error-soft)',
-            'warning': 'var(--warning-soft)',
-            'info': 'var(--info-soft)'
-        };
-        
         const uniqueId = `issue-${idx}`;
-        
-        return `<div style="margin-bottom: 0.75rem; padding: 0.75rem; border-left: 4px solid ${severityColors[issue.severity]}; background: var(--panel); border-radius: 4px;">
-                    <div style="font-weight: 700; color: ${severityColors[issue.severity]}; margin-bottom: 0.25rem; cursor: pointer;" onclick="toggleDetails('${uniqueId}')">
-                        ${issue.title} ▼
+
+        return `<div class="optimizer-issue-card" style="border-left: 4px solid ${severityColors[issue.severity]};">
+                    <div class="optimizer-issue-header" onclick="toggleDetails('${uniqueId}')">
+                        <div class="optimizer-issue-title" style="color: ${severityColors[issue.severity]};">${issue.title} ▼</div>
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text); margin-bottom: 0.25rem;">${issue.description}</div>
-                    <div style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem;">💡 ${issue.suggestion}</div>
-                    <div id="${uniqueId}" style="display: none; background: var(--bg); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; font-size: 0.8rem;">
-                        ${issue.impact ? `<div style="margin-bottom: 0.25rem;"><strong>📊 Impacto:</strong> ${issue.impact}</div>` : ''}
-                        ${issue.example ? `<div style="background: var(--surface); padding: 0.5rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; word-break: break-word;"><strong>📝 Ejemplo:</strong>\n${issue.example}</div>` : ''}
+                    <div class="optimizer-issue-description">${issue.description}</div>
+                    <div class="optimizer-issue-suggestion">💡 ${issue.suggestion}</div>
+                    <div id="${uniqueId}" class="optimizer-issue-details">
+                        ${issue.impact ? `<div><strong>📊 Impacto:</strong> ${issue.impact}</div>` : ''}
+                        ${issue.example ? `<div class="optimizer-issue-example"><strong>📝 Ejemplo:</strong>\n${issue.example}</div>` : ''}
                     </div>
                 </div>`;
     }).join('');
-    
-    resultsContainer.innerHTML = html;
+
+    if (data.recommendations && data.recommendations.length) {
+        const recommendationHtml = `
+            <div class="optimizer-section" style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; margin-bottom: 1rem;">
+                <strong>Recomendaciones clave</strong>
+                <ul class="normalization-list" style="margin: 0.75rem 0 0 1rem; padding: 0; list-style: disc; color: var(--text);">
+                    ${data.recommendations.map(item => `<li style="margin-bottom: 0.35rem;">${item}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+        resultsContainer.innerHTML = recommendationHtml + html;
+    } else {
+        resultsContainer.innerHTML = html;
+    }
+
+    saveHistory(data);
+    renderHistory();
 }
 
 function toggleDetails(elementId) {
@@ -176,6 +235,52 @@ function generateAnalysisReport(data) {
     });
     
     return report;
+}
+
+function saveHistory(data) {
+    if (!window.localStorage) return;
+    const history = JSON.parse(localStorage.getItem('optimizerHistory') || '[]');
+    history.unshift({
+        query: data.query,
+        score: data.efficiency_score,
+        summary: `${data.critical_count || 0}C / ${data.warning_count || 0}W / ${data.info_count || 0}I`,
+        timestamp: new Date().toLocaleTimeString(),
+    });
+    localStorage.setItem('optimizerHistory', JSON.stringify(history.slice(0, 5)));
+}
+
+function renderHistory() {
+    const historyList = document.getElementById('history-list');
+    const history = JSON.parse(localStorage.getItem('optimizerHistory') || '[]');
+    if (!history.length) {
+        historyList.innerHTML = '<div style="color: var(--muted); padding: 1rem;">No hay análisis previos en esta sesión.</div>';
+        return;
+    }
+    historyList.innerHTML = history.map((item, idx) => `
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: grid; grid-template-columns: 1fr auto; gap: 0.5rem;">
+            <div>
+                <div style="font-weight: 700;">${item.query.length > 80 ? item.query.slice(0, 80) + '...' : item.query}</div>
+                <div style="color: var(--muted); font-size: 0.85rem; margin-top: 0.35rem;">${item.summary} • ${item.timestamp}</div>
+            </div>
+            <button onclick="loadHistoryQuery(${idx})" style="padding: 0.5rem 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 999px; cursor: pointer;">Usar</button>
+        </div>
+    `).join('');
+}
+
+function loadHistoryQuery(index) {
+    const history = JSON.parse(localStorage.getItem('optimizerHistory') || '[]');
+    const entry = history[index];
+    if (!entry) return;
+    document.getElementById('optimizer-input').value = entry.query;
+    analyzeSQL();
+}
+
+function loadQuickExample() {
+    loadExample("SELECT o.order_id, c.name, p.product_name, o.total_amount FROM orders o JOIN customers c ON o.customer_id = c.customer_id JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON oi.product_id = p.product_id WHERE p.name LIKE '%wireless%' AND o.status = 'completed' ORDER BY o.order_date DESC;");
+}
+
+function loadLikeExample() {
+    loadExample("SELECT o.order_id, c.name, p.name FROM orders o JOIN customers c ON o.customer_id = c.customer_id JOIN products p ON o.product_id = p.product_id WHERE p.name LIKE '%pro%' OR c.email LIKE '%@example.com' ORDER BY o.order_date DESC;");
 }
 
 async function handleCopyAnalysis() {
@@ -219,13 +324,13 @@ function resetOptimizer() {
     document.getElementById('analysis-summary').textContent = 'Aquí aparecerán los resultados';
 }
 
-function loadLikeExample() {
-    loadExample("SELECT * FROM productos WHERE nombre LIKE '%laptop%';");
-}
-
 function loadExample(sql) {
     document.getElementById('optimizer-input').value = sql;
     analyzeSQL();
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    renderHistory();
+});
 </script>
 {% endblock %}

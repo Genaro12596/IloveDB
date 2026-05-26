@@ -319,7 +319,18 @@ function loadNormalizationExample() {
     const sqlInput = document.getElementById("sql-input");
     if (!sqlInput) return;
 
-    sqlInput.value = `CREATE TABLE ordenes ( orden_id INT PRIMARY KEY, cliente_id INT, cliente_nombre VARCHAR(50), cliente_direccion VARCHAR(100), producto_id INT, producto_nombre VARCHAR(50) );`;
+    sqlInput.value = `CREATE TABLE ordenes (
+    orden_id INT PRIMARY KEY,
+    cliente_id INT,
+    cliente_nombre VARCHAR(100),
+    cliente_email VARCHAR(120),
+    cliente_direccion VARCHAR(150),
+    producto_id INT,
+    producto_nombre VARCHAR(150),
+    cantidad INT,
+    precio_unitario DECIMAL(10,2),
+    fecha_orden DATE
+);`;
 }
 
 function parseNormalizationInput() {
@@ -344,27 +355,73 @@ function analyzeNormalization() {
         .then(data => {
             const resultsElement = document.getElementById("norm-results");
             const output = document.getElementById("norm-output");
+            const errorContainer = document.getElementById("norm-error");
 
-            if (!resultsElement || !output) return;
+            if (!resultsElement || !output || !errorContainer) return;
             if (data.error) {
                 showNormalizationError(data.error);
                 return;
             }
 
             const result = data.result;
-            resultsElement.innerHTML = [
-                { title: '1FN', status: result['1fn'].status, detail: result['1fn'].detail },
-                { title: '2FN', status: result['2fn'].status, detail: result['2fn'].detail },
-                { title: '3FN', status: result['3fn'].status, detail: result['3fn'].detail }
-            ].map(item => {
-                const statusClass = item.status === 'CUMPLE' ? 'normalization-result-status--cumple' : 'normalization-result-status--no-cumple';
-                return `
-                    <div class="normalization-result-row">
-                        <div class="normalization-result-status ${statusClass}">${item.status}</div>
-                        <div class="normalization-result-detail"><strong>${item.title}</strong><br />${item.detail}</div>
+            const stats = result.statistics || {};
+            const recommendations = result.recommendations || [];
+            const dependencies = result.dependencies || [];
+            const normalizedSql = result.normalized_sql || '';
+
+            resultsElement.innerHTML = `
+                <div class="normalization-summary-grid">
+                    <div class="summary-card">
+                        <strong>Columnas detectadas</strong>
+                        <span>${stats.column_count || 0}</span>
                     </div>
-                `;
-            }).join('');
+                    <div class="summary-card">
+                        <strong>Claves primarias</strong>
+                        <span>${stats.primary_key_count || 0}</span>
+                    </div>
+                    <div class="summary-card">
+                        <strong>Entidades relacionadas</strong>
+                        <span>${stats.detected_entities || 0}</span>
+                    </div>
+                </div>
+                <div class="normalization-result-row">
+                    <div class="normalization-result-status ${result['1fn'].status === 'CUMPLE' ? 'normalization-result-status--cumple' : 'normalization-result-status--no-cumple'}">${result['1fn'].status}</div>
+                    <div class="normalization-result-detail"><strong>1FN</strong><br />${result['1fn'].detail}</div>
+                </div>
+                <div class="normalization-result-row">
+                    <div class="normalization-result-status ${result['2fn'].status === 'CUMPLE' ? 'normalization-result-status--cumple' : 'normalization-result-status--no-cumple'}">${result['2fn'].status}</div>
+                    <div class="normalization-result-detail"><strong>2FN</strong><br />${result['2fn'].detail}</div>
+                </div>
+                <div class="normalization-result-row">
+                    <div class="normalization-result-status ${result['3fn'].status === 'CUMPLE' ? 'normalization-result-status--cumple' : 'normalization-result-status--no-cumple'}">${result['3fn'].status}</div>
+                    <div class="normalization-result-detail"><strong>3FN</strong><br />${result['3fn'].detail}</div>
+                </div>
+                <div class="normalization-result-row">
+                    <div class="normalization-result-status ${result.bcnf.status === 'CUMPLE' ? 'normalization-result-status--cumple' : 'normalization-result-status--no-cumple'}">${result.bcnf.status}</div>
+                    <div class="normalization-result-detail"><strong>BCNF</strong><br />${result.bcnf.detail}</div>
+                </div>
+                <div class="normalization-section">
+                    <h4>Recomendaciones</h4>
+                    <ul class="normalization-list">
+                        ${recommendations.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="normalization-section">
+                    <h4>Entidades sugeridas</h4>
+                    ${dependencies.length ? dependencies.map(dep => `
+                        <div class="dependency-card">
+                            <strong>${dep.entity}</strong>
+                            <p>${dep.recommendation}</p>
+                            <small>${dep.columns.join(', ')}</small>
+                        </div>
+                    `).join('') : '<p style="color: var(--muted);">No se encontraron entidades derivadas.</p>'}
+                </div>
+                <div class="normalization-section">
+                    <h4>SQL Normalizado sugerido</h4>
+                    <pre class="code-output">${normalizedSql}</pre>
+                </div>
+            `;
+
             output.hidden = false;
             showNormalizationError("");
         })

@@ -4,65 +4,197 @@
 <section class="section section-page">
     <div class="section__header">
         <h2>Generador de CRUD Automatizado</h2>
-        <p class="section__subtitle">Pega tu CREATE TABLE y genera automáticamente INSERT, SELECT, UPDATE, DELETE.</p>
+        <p class="section__subtitle">Convierte tu CREATE TABLE en un paquete de código profesional para SQL, PHP, Node.js, Flask o Spring Boot.</p>
     </div>
 
     <div class="panel">
         <div class="panel__field panel__field--full">
             <label class="field-label" for="sql-input">Pega tu script CREATE TABLE</label>
-            <textarea id="sql-input" class="input" placeholder="CREATE TABLE usuarios (...)" style="height: 120px; font-family: monospace;"></textarea>
+            <textarea id="sql-input" class="input" placeholder="CREATE TABLE usuarios (...)" style="height: 140px; font-family: monospace;"></textarea>
         </div>
 
-        <div class="panel__footer" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div class="panel__row" style="gap: 1rem; flex-wrap: wrap; margin-top: 1rem; display: flex;">
+            <div class="panel__field" style="flex: 1; min-width: 180px;">
+                <label class="field-label" for="language-select">Lenguaje</label>
+                <select id="language-select" class="input">
+                    <option value="sql">SQL puro</option>
+                    <option value="php">PHP</option>
+                    <option value="node-express">Node.js + Express</option>
+                    <option value="flask">Python + Flask</option>
+                    <option value="java-spring">Java + Spring Boot</option>
+                </select>
+            </div>
+            <div class="panel__field" style="flex: 1; min-width: 180px;">
+                <label class="field-label" for="architecture-select">Arquitectura</label>
+                <select id="architecture-select" class="input">
+                    <option value="rest_api">API REST</option>
+                    <option value="mvc">MVC ligera</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="panel__footer" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
             <button onclick="injectExample()" class="button button--secondary" style="flex: 1; min-width: 150px;">📋 Ejemplo</button>
             <button onclick="generateCRUD()" class="button button--primary" style="flex: 1; min-width: 150px;">Generar CRUD</button>
+            <button onclick="downloadCrudZip()" class="button button--primary" style="flex: 1; min-width: 150px;">📦 Descargar ZIP</button>
         </div>
     </div>
 
     <div id="generator-error" class="form-error" aria-live="polite"></div>
 
     <div id="crud-output" style="display: none; margin-top: 2rem;">
-        <div id="crud-create"></div>
-        <div id="crud-read"></div>
-        <div id="crud-update"></div>
-        <div id="crud-delete"></div>
+        <div class="panel panel--secondary" style="margin-bottom: 1rem; gap: 1rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <div>
+                <strong>Formato:</strong> <span id="crud-target-label"></span>
+                <br>
+                <strong>Arquitectura:</strong> <span id="crud-architecture-label"></span>
+            </div>
+            <div>
+                <button onclick="downloadCrudZip()" class="button button--secondary">📦 Descargar paquete ZIP</button>
+            </div>
+        </div>
+
+        <div id="crud-files" class="grid" style="gap: 1rem;"></div>
     </div>
 </section>
 
 <script>
 function injectExample() {
-    document.getElementById('sql-input').value = 'CREATE TABLE productos ( id INT PRIMARY KEY, nombre VARCHAR(100), precio DECIMAL(10,2), stock INT );';
+    const language = document.getElementById('language-select').value;
+    const architecture = document.getElementById('architecture-select').value;
+    const sqlInput = document.getElementById('sql-input');
+    if (!sqlInput) return;
+
+    let example = '';
+    if (language === 'sql') {
+        example = `CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    sku VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    stock INT DEFAULT 0,
+    category_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES categories(category_id)
+);`;
+    } else if (language === 'php') {
+        example = `CREATE TABLE users (
+    user_id INT PRIMARY KEY,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(80),
+    last_name VARCHAR(80),
+    role VARCHAR(30) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL
+);`;
+        if (architecture === 'mvc') {
+            example = `CREATE TABLE posts (
+    post_id INT PRIMARY KEY,
+    author_id INT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    body TEXT NOT NULL,
+    published_at TIMESTAMP NULL,
+    status VARCHAR(20) DEFAULT 'draft',
+    CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES users(user_id)
+);`;
+        }
+    } else if (language === 'node-express') {
+        example = `CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(12,2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    shipped_date DATETIME NULL,
+    CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);`;
+        if (architecture === 'mvc') {
+            example = `CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`;
+        }
+    } else if (language === 'flask') {
+        example = `CREATE TABLE invoices (
+    invoice_id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    invoice_date DATE NOT NULL,
+    total DECIMAL(12,2) NOT NULL,
+    paid BOOLEAN DEFAULT FALSE,
+    due_date DATE,
+    CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);`;
+        if (architecture === 'mvc') {
+            example = `CREATE TABLE invoice_items (
+    item_id INT PRIMARY KEY,
+    invoice_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    CONSTRAINT fk_invoice FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id)
+);`;
+        }
+    } else if (language === 'java-spring') {
+        example = `CREATE TABLE catalog_items (
+    item_id BIGINT PRIMARY KEY,
+    sku VARCHAR(60) UNIQUE NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    price DECIMAL(12,2) NOT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`;
+        if (architecture === 'mvc') {
+            example = `CREATE TABLE employees (
+    employee_id BIGINT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    hire_date DATE,
+    salary DECIMAL(12,2)
+);`;
+        }
+    }
+
+    sqlInput.value = example;
 }
 
 async function generateCRUD() {
     const sqlInput = document.getElementById('sql-input').value.trim();
+    const language = document.getElementById('language-select').value;
+    const architecture = document.getElementById('architecture-select').value;
     const errorDiv = document.getElementById('generator-error');
-    
+
     if (!sqlInput) {
         errorDiv.textContent = 'Pega un CREATE TABLE válido';
         errorDiv.classList.add('form-error--visible');
         return;
     }
-    
+
     errorDiv.classList.remove('form-error--visible');
-    
+
     try {
         const response = await fetch('/api/generate-crud', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ create_table_sql: sqlInput })
+            body: JSON.stringify({ create_table_sql: sqlInput, language, architecture })
         });
-        
+
         const data = await response.json();
-        
-        if (data.error) {
-            errorDiv.textContent = data.error;
+        if (!response.ok || data.error) {
+            errorDiv.textContent = data.error || 'Error al generar el CRUD';
             errorDiv.classList.add('form-error--visible');
             return;
         }
-        
+
         renderCRUDOutput(data);
-        
     } catch (error) {
         console.error('Error:', error);
         errorDiv.textContent = 'Error de conexión';
@@ -72,25 +204,80 @@ async function generateCRUD() {
 
 function renderCRUDOutput(data) {
     const output = document.getElementById('crud-output');
-    const operations = ['create', 'read', 'update', 'delete'];
-    const labels = { create: 'CREATE (INSERT)', read: 'READ (SELECT)', update: 'UPDATE', delete: 'DELETE' };
-    
-    operations.forEach(op => {
-        const div = document.getElementById(`crud-${op}`);
-        div.innerHTML = `
+    const filesContainer = document.getElementById('crud-files');
+    const targetLabel = document.getElementById('crud-target-label');
+    const architectureLabel = document.getElementById('crud-architecture-label');
+
+    targetLabel.textContent = data.target_label || 'SQL puro';
+    architectureLabel.textContent = data.architecture_label || 'API REST';
+
+    filesContainer.innerHTML = data.files.map(file => {
+        const code = escapeHtml(file.content);
+        const languageClass = file.name.endsWith('.sql') ? 'language-sql' : file.name.endsWith('.php') ? 'language-php' : file.name.endsWith('.js') ? 'language-javascript' : file.name.endsWith('.py') ? 'language-python' : file.name.endsWith('.java') ? 'language-java' : 'language-none';
+
+        return `
             <div class="output-card">
                 <div class="output-card__header">
-                    <h3>${labels[op]}</h3>
+                    <h3>${file.name}</h3>
                 </div>
-                <pre><code class="language-sql">${escapeHtml(data[op].sql)}</code></pre>
-                <p style="margin-top: 1rem; line-height: 1.6; color: #555;">${escapeHtml(data[op].explanation)}</p>
-                <button onclick="copyToClipboard('${escapeHtml(data[op].sql).replace(/'/g, "\\'")}', this)" class="button button--secondary" style="margin-top: 1rem;">📋 Copiar</button>
+                <div class="output-card__body">
+                    <pre><code class="${languageClass}">${code}</code></pre>
+                </div>
+                <div class="output-card__footer" style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem;">
+                    <button type="button" onclick="copyToClipboard('${escapeHtml(file.content).replace(/'/g, "\\'")}')" class="button button--secondary">📋 Copiar</button>
+                    <button type="button" onclick="downloadFile('${escapeHtml(file.content).replace(/'/g, "\\'")}', '${file.name}', 'text/plain')" class="button button--primary">💾 Descargar</button>
+                </div>
             </div>
         `;
-    });
-    
+    }).join('');
+
     output.style.display = 'block';
     if (window.Prism) Prism.highlightAllUnder(output);
+}
+
+async function downloadCrudZip() {
+    const sqlInput = document.getElementById('sql-input').value.trim();
+    const language = document.getElementById('language-select').value;
+    const architecture = document.getElementById('architecture-select').value;
+    const errorDiv = document.getElementById('generator-error');
+
+    if (!sqlInput) {
+        errorDiv.textContent = 'Pega un CREATE TABLE válido antes de descargar.';
+        errorDiv.classList.add('form-error--visible');
+        return;
+    }
+
+    errorDiv.classList.remove('form-error--visible');
+
+    try {
+        const response = await fetch('/api/download-crud-zip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ create_table_sql: sqlInput, language, architecture })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            errorDiv.textContent = data.error || 'No se pudo descargar el paquete ZIP.';
+            errorDiv.classList.add('form-error--visible');
+            return;
+        }
+
+        const blob = await response.blob();
+        const filename = 'crud_generator_package.zip';
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error:', error);
+        errorDiv.textContent = 'Error al descargar el ZIP';
+        errorDiv.classList.add('form-error--visible');
+    }
 }
 
 function escapeHtml(text) {
