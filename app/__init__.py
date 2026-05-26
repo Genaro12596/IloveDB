@@ -13,11 +13,12 @@ def get_resource_path(relative_path):
     """Obtiene la ruta absoluta hacia los archivos, funciona para dev y PyInstaller."""
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
 
 def create_app() -> Flask:
-    # Inicializamos Flask usando la función auxiliar
-    app = Flask(__name__, 
+    # Inicializamos Flask usando la función auxiliar con rutas relativas al paquete `app`
+    app = Flask(__name__,
                 template_folder=get_resource_path('templates'),
                 static_folder=get_resource_path('static'))
 
