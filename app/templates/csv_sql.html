@@ -1,107 +1,196 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<section class="section section-page">
-    <div class="section__header">
-        <h2>Convierte archivos CSV en sentencias SQL.</h2>
-        <p class="section__subtitle">Agrega tu tabla y datos para generar SQL listos para tu base de datos.</p>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+
+<div class="tool-page">
+    <div id="ui-toast" style="display:none; position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 8px; color: white; font-weight: 600; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: opacity 0.3s;"></div>
+
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 800; margin: 0;">CSV a SQL Studio</h1>
+            <p style="color: var(--muted); margin: 0.5rem 0 0 0;">Motor de inferencia de tipos y generación de migraciones masivas.</p>
+        </div>
+        <div>
+            <button id="btn-example" style="padding: 0.6rem 1.2rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📋 Cargar Dataset de Prueba
+            </button>
+        </div>
     </div>
 
-    <div class="panel">
-        <div class="panel__grid">
-            <div class="panel__field">
-                <label class="field-label" for="table-name">Nombre de tabla</label>
-                <input id="table-name" class="input" placeholder="ej. usuarios" />
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--text);">Nombre de la Tabla Destino</label>
+                <input id="table-name" type="text" placeholder="ej. tbl_usuarios" style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(128, 128, 128, 0.05); font-family: monospace;">
             </div>
-            <div class="panel__field panel__field--full">
-                <label class="field-label" for="csv-input">Contenido CSV</label>
-                <textarea id="csv-input" class="input input--textarea" placeholder="id,nombre,email\n1,Ana,ana@mail.com"></textarea>
+
+            <div style="flex-grow: 1; display: flex; flex-direction: column;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--text);">Contenido CSV (Raw Data)</label>
+                <textarea id="csv-input" style="flex-grow: 1; min-height: 200px; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(128, 128, 128, 0.05); color: var(--text); font-family: 'Courier New', monospace; font-size: 0.9rem; resize: vertical; outline: none;" placeholder="id, nombre, edad, activo, fecha_registro&#10;1, Ana, 28, true, 2024-01-15"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button id="btn-convert" style="flex: 1; padding: 0.8rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                    Ejecutar Transpilación
+                </button>
             </div>
         </div>
 
-        <div class="panel__footer">
-            <button onclick="convertCSV()" class="button button--primary">Convertir CSV</button>
-            <button onclick="loadExampleCSV()" style="flex: 0.5; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer; margin-left: 0.75rem;">
-                📋 Ejemplo
-            </button>
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
+            
+            <div id="output-area" style="display: none; flex-direction: column; flex-grow: 1;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; gap: 1rem;">
+                        <span style="font-size: 0.85rem; background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 600;">Registros: <span id="stat-rows">0</span></span>
+                        <span style="font-size: 0.85rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 600;">Columnas: <span id="stat-cols">0</span></span>
+                    </div>
+                    <button id="btn-toggle-schema" style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                        🔍 Ver Esquema
+                    </button>
+                </div>
+
+                <div id="schema-panel" style="display: none; margin-bottom: 1rem; padding: 1rem; background: #0f172a; border-radius: 8px; border: 1px solid var(--border);">
+                    <h4 style="margin: 0 0 0.8rem 0; font-size: 0.85rem; color: var(--muted); text-transform: uppercase;">Tipos de Dato Inferidos</h4>
+                    <div id="schema-tags" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h2 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Script Generado</h2>
+                    <div>
+                        <button id="btn-copy" style="background: transparent; border: none; color: var(--accent); cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-right: 1rem;">📋 Copiar</button>
+                        <button id="btn-download" style="background: transparent; border: none; color: #38bdf8; cursor: pointer; font-weight: 600; font-size: 0.9rem;">💾 Descargar .sql</button>
+                    </div>
+                </div>
+                
+                <pre style="flex-grow: 1; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 0; border-left: 4px solid var(--accent); max-height: 400px; overflow-y: auto;"><code id="sql-result" class="language-sql" style="font-family: 'Courier New', monospace; font-size: 0.85rem;"></code></pre>
+            </div>
+
+            <div id="empty-state" style="text-align: center; color: var(--muted); padding: 4rem 0; margin: auto;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.7;">📊</div>
+                <h3 style="margin:0 0 0.5rem 0; color: var(--text); font-size: 1.2rem;">Esperando Datos</h3>
+                <p style="margin:0; font-size: 0.95rem;">Ingresa tu CSV para generar las sentencias CREATE y los INSERTS automáticamente.</p>
+            </div>
         </div>
     </div>
+</div>
 
-    <div id="csv-error" class="form-error" aria-live="polite"></div>
-
-    <div class="output-card">
-        <div class="output-card__header">
-            <h3>SQL generado</h3>
-            <p>Copia la consulta o ajusta el modelo a tu base de datos.</p>
-        </div>
-        <pre><code id="csv-result" class="language-sql"></code></pre>
-        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
-            <button id="copy-insert-btn" onclick="handleCopyInsertCSV()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                📋 Copiar INSERT
-            </button>
-            <button id="download-csv-sql-btn" onclick="handleDownloadCSVSQL()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                💾 Descargar SQL
-            </button>
-        </div>
-    </div>
-</section>
 <script>
-async function convertCSV() {
-    const tableName = document.getElementById('table-name').value.trim();
-    const csvContent = document.getElementById('csv-input').value.trim();
-    
-    if (!tableName || !csvContent) {
-        showWarning('Advertencia', 'Completa los campos requeridos');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/csv-to-sql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ table_name: tableName, csv_data: csvContent })
-        });
+// UI Toast Notification
+function showToast(message, type = 'error') {
+    const toast = document.getElementById('ui-toast');
+    toast.textContent = message;
+    toast.style.background = type === 'error' ? '#ef4444' : '#10b981';
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 300);
+    }, 3000);
+}
+
+// Configuración de Eventos (Evita botones inactivos)
+document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Botón Cargar Ejemplo
+    document.getElementById('btn-example').addEventListener('click', () => {
+        document.getElementById('table-name').value = 'tbl_empleados';
+        document.getElementById('csv-input').value = 'id, nombre, departamento, salario, es_remoto, fecha_contratacion\n1, Ana García, IT, 4500.50, true, 2023-05-15\n2, Carlos López, Ventas, 3200.00, false, 2024-01-20\n3, María Rodríguez, RRHH, 3800.75, true, 2022-11-01';
         
-        const data = await response.json();
+        const input = document.getElementById('csv-input');
+        input.style.backgroundColor = '#1e293b';
+        setTimeout(() => input.style.backgroundColor = '#0f172a', 300);
+    });
+
+    // 2. Botón Ejecutar Transpilación
+    document.getElementById('btn-convert').addEventListener('click', async function() {
+        const tableName = document.getElementById('table-name').value.trim();
+        const csvContent = document.getElementById('csv-input').value.trim();
         
-        if (data.error) {
-            showError('Error', data.error);
+        if (!tableName || !csvContent) {
+            showToast('⚠️ Completa el nombre de la tabla y los datos CSV.');
             return;
         }
         
-        document.getElementById('csv-result').textContent = data.sql;
-        if (window.Prism) {
-            Prism.highlightElement(document.getElementById('csv-result'));
+        const btn = this;
+        const originalText = btn.innerText;
+        btn.innerText = 'Procesando...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        try {
+            const response = await fetch('/api/csv-to-sql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ table_name: tableName, csv_data: csvContent })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok || data.error) throw new Error(data.error || 'Error del servidor');
+            
+            // Renderizar UI
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('output-area').style.display = 'flex';
+            
+            // Stats
+            document.getElementById('stat-rows').textContent = data.stats.rows;
+            document.getElementById('stat-cols').textContent = data.stats.columns;
+
+            // Render Schema Tags
+            const schemaContainer = document.getElementById('schema-tags');
+            schemaContainer.innerHTML = '';
+            data.schema.forEach(col => {
+                schemaContainer.innerHTML += `<span style="font-size: 0.8rem; background: #1e293b; color: #cbd5e1; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #334155;"><strong>${col.column}</strong>: <span style="color: #a78bfa">${col.type}</span></span>`;
+            });
+
+            // Render SQL Code
+            const codeBlock = document.getElementById('sql-result');
+            codeBlock.textContent = data.sql;
+            delete codeBlock.dataset.highlighted;
+            if (window.hljs) hljs.highlightElement(codeBlock);
+            
+            showToast('✅ Conversión exitosa', 'success');
+
+        } catch (error) {
+            console.error('Error:', error);
+            showToast(error.message, 'error');
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
         }
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Error', 'Error de conexión');
-    }
-}
+    });
 
-async function handleCopyInsertCSV() {
-    const content = document.getElementById('csv-result').textContent;
-    if (!content) {
-        showWarning('Advertencia', 'No hay contenido para copiar');
-        return;
-    }
-    await copyToClipboard(content, 'copy-insert-btn');
-}
+    // 3. Toggle del Panel de Esquema
+    document.getElementById('btn-toggle-schema').addEventListener('click', () => {
+        const panel = document.getElementById('schema-panel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
 
-async function handleDownloadCSVSQL() {
-    const content = document.getElementById('csv-result').textContent;
-    if (!content) {
-        showWarning('Advertencia', 'No hay contenido para descargar');
-        return;
-    }
-    downloadFile(content, 'insert_data.sql', 'text/sql');
-}
+    // 4. Copiar y Descargar
+    document.getElementById('btn-copy').addEventListener('click', () => {
+        const content = document.getElementById('sql-result').textContent;
+        navigator.clipboard.writeText(content).then(() => showToast("✅ Código copiado", "success"));
+    });
 
-function loadExampleCSV() {
-    document.getElementById('table-name').value = 'usuarios';
-    document.getElementById('csv-input').value = 'id,nombre,email,fecha_registro\n1,Ana García,ana@ejemplo.com,2024-01-15\n2,Carlos López,carlos@ejemplo.com,2024-02-20\n3,María Rodríguez,maria@ejemplo.com,2024-03-10';
-    convertCSV();
-}
+    document.getElementById('btn-download').addEventListener('click', () => {
+        const content = document.getElementById('sql-result').textContent;
+        const tableName = document.getElementById('table-name').value.trim() || 'export';
+        const blob = new Blob([content], { type: 'text/sql' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${tableName}_migration.sql`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    });
+
+});
 </script>
 {% endblock %}

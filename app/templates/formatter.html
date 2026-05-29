@@ -1,156 +1,242 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+
 <div class="tool-page">
-    <!-- Header -->
-    <div style="margin-bottom: 2rem;">
-        <h1 style="font-size: 1.8rem; font-weight: 800; margin: 0;">Formateador SQL</h1>
-        <p style="color: var(--muted); margin: 0.5rem 0 0 0;">Formatea y organiza tus consultas SQL automáticamente</p>
+    <div id="ui-toast" style="display:none; position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 8px; color: white; font-weight: 600; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: opacity 0.3s;"></div>
+
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 800; margin: 0;">Analizador de SQL y formateo</h1>
+            <p style="color: var(--muted); margin: 0.5rem 0 0 0;">Análisis de rendimiento, buenas prácticas y formateo de consultas.</p>
+        </div>
+        <div>
+            <select id="example-select" style="padding: 0.6rem 1rem; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-weight: 600; cursor: pointer; outline: none;">
+                <option value="">Cargar fragmento de prueba...</option>
+                <option value="select_star">⚠️ Detectar Select *</option>
+                <option value="danger_update">🚨 Peligro: UPDATE sin WHERE</option>
+                <option value="implicit_join">🔧 Sintaxis JOIN Antigua</option>
+                <option value="optimized">✅ Consulta Optimizada (Ejemplo)</option>
+            </select>
+        </div>
     </div>
 
-    <!-- Main Grid -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-        <!-- Input -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
-            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">SQL Desordenado</h2>
+        
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
+            <h2 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 700; display: flex; justify-content: space-between;">
+                Editor de Código SQL <span style="color: var(--accent);">&lt;/&gt;</span>
+            </h2>
             <textarea 
                 id="sql-input" 
-                style="width: 100%; min-height: 12rem; padding: 0.875rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); font-family: monospace; font-size: 0.9rem; resize: vertical;"
-                placeholder="SELECT id,name,email FROM users WHERE status='active' AND created_at>'2024-01-01';"
+                style="flex-grow: 1; min-height: 250px; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: rgba(128, 128, 128, 0.05); color: var(--text); font-family: 'Courier New', Courier, monospace; font-size: 0.95rem; resize: vertical; line-height: 1.5; outline: none;"
+                placeholder="Ingresa tu consulta SQL aquí para iniciar el análisis..."
             ></textarea>
             
             <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                <button onclick="formatSQL()" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer;">
-                    Formatear
+                <button id="btn-analyze" style="flex: 1; padding: 0.8rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                    Ejecutar Análisis
                 </button>
-                <button onclick="resetFormatter()" style="flex: 0.5; padding: 0.75rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px; font-weight: 600; cursor: pointer;">
+                <button id="btn-clear" style="padding: 0.8rem 1.5rem; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer;">
                     Limpiar
                 </button>
             </div>
         </div>
 
-        <!-- Output -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
-            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">SQL Formateado</h2>
-            <pre style="background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; min-height: 12rem; overflow-x: auto; margin: 0;"><code id="formatted-result" class="language-sql"></code></pre>
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
             
-            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
-                <button id="copy-sql-btn" onclick="handleCopySQLFormatter()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                    📋 Copiar SQL
-                </button>
-                <button id="download-sql-btn" onclick="handleDownloadSQLFormatter()" style="flex: 1; min-width: 120px; padding: 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 999px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                    💾 Descargar TXT
-                </button>
+            <div id="dashboard-header" style="display: none; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
+                <div>
+                    <h3 style="margin: 0; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Score de Optimización</h3>
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                        <span id="score-value" style="font-size: 2.8rem; font-weight: 900; line-height: 1;">--</span>
+                        <span style="font-size: 1.2rem; color: var(--muted);">/100</span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span id="score-badge" style="padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-block;">--</span>
+                    <div style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--muted); display: flex; gap: 1rem;">
+                        <span>Complejidad: <strong id="stat-complexity" style="color: var(--text);">--</strong></span>
+                        <span>Sentencias: <strong id="stat-statements" style="color: var(--text);">--</strong></span>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Ejemplos -->
-    <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
-        <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Ejemplos para probar:</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
-            <button id="example-select-btn" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
-                SELECT simple con WHERE
-            </button>
-            <button id="example-join-btn" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
-                JOIN con GROUP BY
-            </button>
-            <button id="example-subquery-btn" style="padding: 0.75rem; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 600;">
-                Subconsulta anidada
-            </button>
+            <div id="results-area" style="flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; max-height: 500px; padding-right: 5px;">
+                
+                <div id="analysis-container" style="display: none; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;"></div>
+
+                <div id="formatted-section" style="display: none; flex-direction: column; flex-grow: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <h2 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Código Refactorizado</h2>
+                        <button id="btn-copy" style="background: transparent; border: none; color: var(--accent); cursor: pointer; font-weight: 600; font-size: 0.9rem;">📋 Copiar SQL</button>
+                    </div>
+                    <pre style="flex-grow: 1; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 0; border-left: 4px solid var(--accent);"><code id="formatted-result" class="language-sql" style="font-family: 'Courier New', monospace; font-size: 0.9rem;"></code></pre>
+                </div>
+                
+                <div id="empty-state" style="text-align: center; color: var(--muted); padding: 4rem 0; margin: auto;">
+                    <div style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.7;">⚙️</div>
+                    <h3 style="margin:0 0 0.5rem 0; color: var(--text); font-size: 1.2rem;">Motor Inactivo</h3>
+                    <p style="margin:0; font-size: 0.95rem;">Ingresa una consulta y ejecuta el análisis para obtener el reporte técnico y sugerencias de índices.</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
 const SQL_EXAMPLES = {
-    selectSimple: "select id,name,email from users where status='active' and created_at>'2024-01-01';",
-    joinGroupBy: "select d.department_name,count(e.id) as total_employees from employees e join departments d on e.department_id=d.id group by d.department_name;",
-    subquery: "select name,salary from employees where salary>(select avg(salary) from employees where department_id=10);",
+    select_star: "SELECT * FROM facturas WHERE fecha > '2024-01-01';",
+    danger_update: "UPDATE empleados SET salario = 5000;",
+    implicit_join: "SELECT e.nombre, d.departamento FROM empleados e, departamentos d WHERE e.dep_id = d.id;",
+    optimized: "SELECT e.id, e.nombre, d.nombre AS departamento \nFROM empleados e \nINNER JOIN departamentos d ON e.dep_id = d.id \nWHERE e.estado = 'activo';"
 };
 
-function setExampleSql(sql) {
-    const input = document.getElementById("sql-input");
-    if (!input) return;
-    input.value = sql;
+// UI Toast Notification System
+function showToast(message, type = 'error') {
+    const toast = document.getElementById('ui-toast');
+    toast.textContent = message;
+    toast.style.background = type === 'error' ? '#ef4444' : '#10b981';
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 300);
+    }, 3000);
 }
 
-async function formatSQL() {
-    const sql = document.getElementById("sql-input").value.trim();
-    
-    if (!sql) {
-        showError('Error', 'Ingresa una consulta SQL');
-        return;
-    }
-    
-    try {
-        const response = await fetch("/api/format-sql", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sql })
-        });
+// Inicialización de Eventos (Esto previene el bug de botones que no responden)
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('example-select').addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val && SQL_EXAMPLES[val]) {
+            document.getElementById("sql-input").value = SQL_EXAMPLES[val];
+        }
+    });
 
-        const data = await response.json();
-
-        if (data.error) {
-            showError('Error', data.error);
+    document.getElementById('btn-analyze').addEventListener('click', async function() {
+        const sqlInput = document.getElementById("sql-input").value.trim();
+        if (!sqlInput) {
+            showToast("⚠️ Ingresa una consulta SQL para analizar.");
             return;
         }
 
-        document.getElementById("formatted-result").textContent = data.formatted_sql;
-        if (window.Prism) {
-            Prism.highlightElement(document.getElementById("formatted-result"));
+        // UI Loading State (Feedback visual)
+        const btn = this;
+        const originalText = btn.innerText;
+        btn.innerText = 'Analizando...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        try {
+            const response = await fetch("/api/format-sql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sql: sqlInput })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Error desconocido del servidor');
+            }
+
+            renderDashboard(data);
+            
+        } catch (error) {
+            console.error('API Error:', error);
+            showToast(error.message, 'error');
+        } finally {
+            // Restore UI State
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
         }
+    });
 
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Error', 'Error de conexión');
+    document.getElementById('btn-clear').addEventListener('click', () => {
+        document.getElementById("sql-input").value = "";
+        document.getElementById("example-select").value = "";
+        document.getElementById("dashboard-header").style.display = "none";
+        document.getElementById("analysis-container").style.display = "none";
+        document.getElementById("formatted-section").style.display = "none";
+        document.getElementById("empty-state").style.display = "block";
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', () => {
+        const text = document.getElementById("formatted-result").textContent;
+        navigator.clipboard.writeText(text).then(() => showToast("✅ Código SQL copiado", "success"));
+    });
+});
+
+function renderDashboard(data) {
+    // 1. Ocultar Empty State
+    document.getElementById("empty-state").style.display = "none";
+
+    // 2. Render Score y Estadísticas
+    document.getElementById("dashboard-header").style.display = "flex";
+    document.getElementById("score-value").textContent = data.score;
+    document.getElementById("stat-complexity").textContent = data.stats.complexity;
+    document.getElementById("stat-statements").textContent = data.stats.statements;
+    
+    const badge = document.getElementById("score-badge");
+    badge.textContent = data.level;
+    
+    // Colores dinámicos
+    if (data.score > 85) { badge.style.background = '#064e3b'; badge.style.color = '#34d399'; document.getElementById("score-value").style.color = '#10b981';}
+    else if (data.score > 60) { badge.style.background = '#78350f'; badge.style.color = '#fbbf24'; document.getElementById("score-value").style.color = '#f59e0b'; }
+    else { badge.style.background = '#7f1d1d'; badge.style.color = '#f87171'; document.getElementById("score-value").style.color = '#ef4444'; }
+
+    // 3. Render Advertencias y Recomendaciones (Paneles Profesionales)
+    const analysisContainer = document.getElementById("analysis-container");
+    analysisContainer.innerHTML = ''; 
+    analysisContainer.style.display = 'flex';
+    
+    if (data.analysis && data.analysis.length > 0) {
+        data.analysis.forEach(warning => {
+            let bg, border, icon;
+            if (warning.type === 'danger') { bg = 'rgba(239, 68, 68, 0.1)'; border = '#ef4444'; icon = '🚨'; } 
+            else if (warning.type === 'warning') { bg = 'rgba(245, 158, 11, 0.1)'; border = '#f59e0b'; icon = '⚠️'; } 
+            else { bg = 'rgba(56, 189, 248, 0.1)'; border = '#38bdf8'; icon = '💡'; }
+
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `border: 1px solid ${border}; background-color: ${bg}; border-radius: 8px; overflow: hidden;`;
+            
+            // Estructura modular: Problema -> Solución -> Código
+            let contentHTML = `
+                <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <strong style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 1rem; color: ${border};">${icon} ${warning.title}</strong>
+                    <span style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.5; display: block;">${warning.message}</span>
+                </div>
+            `;
+            
+            if (warning.recommendation) {
+                contentHTML += `
+                <div style="padding: 1rem; background: rgba(0,0,0,0.2);">
+                    <strong style="color: #a78bfa; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Recomendación</strong>
+                    <p style="margin: 0.3rem 0 0.8rem 0; font-size: 0.9rem; color: #e2e8f0;">${warning.recommendation}</p>
+                    ${warning.example ? `<code style="display: block; background: #0f172a; padding: 0.6rem; border-radius: 6px; border: 1px solid #1e293b; color: #94a3b8; font-family: monospace; font-size: 0.85rem;">${warning.example}</code>` : ''}
+                </div>`;
+            }
+
+            alertDiv.innerHTML = contentHTML;
+            analysisContainer.appendChild(alertDiv);
+        });
     }
-}
 
-function resetFormatter() {
-    document.getElementById("sql-input").value = "";
-    document.getElementById("formatted-result").textContent = "";
-}
-
-function loadExample(sql) {
-    setExampleSql(sql);
-}
-
-function initializeExampleButtons() {
-    const selectButton = document.getElementById('example-select-btn');
-    const joinButton = document.getElementById('example-join-btn');
-    const subqueryButton = document.getElementById('example-subquery-btn');
-
-    if (selectButton) {
-        selectButton.addEventListener('click', () => setExampleSql(SQL_EXAMPLES.selectSimple));
-    }
-    if (joinButton) {
-        joinButton.addEventListener('click', () => setExampleSql(SQL_EXAMPLES.joinGroupBy));
-    }
-    if (subqueryButton) {
-        subqueryButton.addEventListener('click', () => setExampleSql(SQL_EXAMPLES.subquery));
-    }
-}
-
-document.addEventListener('DOMContentLoaded', initializeExampleButtons);
-
-async function handleCopySQLFormatter() {
-    const content = document.getElementById('formatted-result').textContent;
-    if (!content) {
-        showWarning('Advertencia', 'No hay contenido para copiar');
-        return;
-    }
-    await copyToClipboard(content, 'copy-sql-btn');
-}
-
-async function handleDownloadSQLFormatter() {
-    const content = document.getElementById('formatted-result').textContent;
-    if (!content) {
-        showWarning('Advertencia', 'No hay contenido para descargar');
-        return;
-    }
-    downloadFile(content, 'query.txt', 'text/plain');
+    // 4. Render Formateo y Resaltado de Sintaxis
+    const formattedSection = document.getElementById("formatted-section");
+    formattedSection.style.display = "flex";
+    
+    const codeBlock = document.getElementById("formatted-result");
+    codeBlock.textContent = data.formatted_sql;
+    
+    // Forzamos a Highlight.js a procesar el bloque renderizado
+    delete codeBlock.dataset.highlighted; 
+    hljs.highlightElement(codeBlock);
 }
 </script>
 {% endblock %}

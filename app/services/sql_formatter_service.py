@@ -1,311 +1,119 @@
 import re
 from typing import List, Optional
-
 import sqlparse
+from abc import ABC, abstractmethod
 
-SQL_TYPE_KEYWORDS = [
-    "INT",
-    "INTEGER",
-    "BIGINT",
-    "SMALLINT",
-    "TINYINT",
-    "VARCHAR",
-    "CHAR",
-    "TEXT",
-    "DATE",
-    "DATETIME",
-    "TIMESTAMP",
-    "TIME",
-    "BOOLEAN",
-    "FLOAT",
-    "DOUBLE",
-    "DECIMAL",
-    "NUMERIC",
-    "REAL",
-    "SERIAL",
-    "BLOB",
-    "JSON",
-    "UUID",
-    "ENUM",
-]
-
-SQL_CONSTRAINT_KEYWORDS = [
-    "PRIMARY KEY",
-    "FOREIGN KEY",
-    "REFERENCES",
-    "NOT NULL",
-    "NULL",
-    "DEFAULT",
-    "UNIQUE",
-    "AUTO_INCREMENT",
-    "AUTO INCREMENT",
-    "CHECK",
-    "CONSTRAINT",
-    "CASCADE",
-    "ON DELETE",
-    "ON UPDATE",
-]
-
+SQL_TYPE_KEYWORDS = ["INT", "INTEGER", "VARCHAR", "TEXT", "DATE", "TIMESTAMP", "BOOLEAN", "FLOAT"]
+SQL_CONSTRAINT_KEYWORDS = ["PRIMARY KEY", "FOREIGN KEY", "REFERENCES", "NOT NULL", "NULL", "UNIQUE"]
 SQL_FORMAT_KEYWORDS = SQL_CONSTRAINT_KEYWORDS + SQL_TYPE_KEYWORDS
 
+# ==========================================
+# MOTOR DE REGLAS (PATRÓN STRATEGY)
+# ==========================================
+
+class SqlRule(ABC):
+    @abstractmethod
+    def analyze(self, statement, sql_text: str) -> Optional[dict]:
+        pass
+
+class SelectStarRule(SqlRule):
+    def analyze(self, statement, sql_text: str):
+        if statement.get_type() == 'SELECT' and re.search(r'SELECT\s+\*', sql_text, re.IGNORECASE):
+            return {
+                "type": "warning",
+                "title": "Sobrecarga de I/O (SELECT *)",
+                "message": "El uso de SELECT * transfiere datos innecesarios a través de la red y el disco.",
+                "recommendation": "Especifica únicamente las columnas requeridas para reducir el consumo de memoria.",
+                "example": "SELECT id, nombre, fecha_registro FROM tabla;"
+            }
+        return None
+
+class MissingWhereRule(SqlRule):
+    def analyze(self, statement, sql_text: str):
+        stmt_type = statement.get_type()
+        if stmt_type in ['UPDATE', 'DELETE']:
+            has_where = any(isinstance(token, sqlparse.sql.Where) for token in statement.tokens)
+            if not has_where:
+                return {
+                    "type": "danger",
+                    "title": f"Operación Destructiva ({stmt_type} sin WHERE)",
+                    "message": f"Se detectó un {stmt_type} sin filtros. Esto afectará a TODOS los registros de la tabla.",
+                    "recommendation": "Agrega siempre una cláusula WHERE usando una clave primaria o índice único.",
+                    "example": f"{stmt_type} tabla SET columna = valor WHERE id = 123;" if stmt_type == 'UPDATE' else f"DELETE FROM tabla WHERE id = 123;"
+                }
+        return None
+
+class UnfilteredSelectRule(SqlRule):
+    def analyze(self, statement, sql_text: str):
+        if statement.get_type() == 'SELECT':
+            has_where = any(isinstance(token, sqlparse.sql.Where) for token in statement.tokens)
+            has_limit = re.search(r'\bLIMIT\b', sql_text, re.IGNORECASE)
+            
+            if not has_where and not has_limit:
+                return {
+                    "type": "info",
+                    "title": "Escaneo de tabla completa (Full Table Scan)",
+                    "message": "Consulta sin filtros ni límites. En producción con tablas masivas, degradará el rendimiento.",
+                    "recommendation": "Agrega una cláusula WHERE indexada o un LIMIT para paginar resultados.",
+                    "example": "SELECT columnas FROM tabla WHERE estado = 'activo' LIMIT 100;"
+                }
+        return None
+
+class ImplicitJoinRule(SqlRule):
+    def analyze(self, statement, sql_text: str):
+        if statement.get_type() == 'SELECT' and re.search(r'FROM\s+\w+\s*,\s*\w+', sql_text, re.IGNORECASE):
+            return {
+                "type": "warning",
+                "title": "Sintaxis JOIN Antigua (Implícita)",
+                "message": "Estás usando JOINs implícitos (separados por comas). Esto es propenso a errores lógicos y productos cartesianos.",
+                "recommendation": "Utiliza la sintaxis explícita estándar ANSI SQL (INNER JOIN, LEFT JOIN).",
+                "example": "SELECT a.col, b.col FROM tabla_a a INNER JOIN tabla_b b ON a.id = b.a_id;"
+            }
+        return None
+
+# ==========================================
+# FUNCIONES PRINCIPALES
+# ==========================================
 
 def format_sql_query(sql: str) -> str:
     sql_text = (sql or "").strip()
-    if not sql_text:
-        return ""
-
+    if not sql_text: return ""
     formatted_sql = sqlparse.format(
-        sql_text,
-        reindent=True,
-        indent_width=4,
-        keyword_case="upper",
-        strip_comments=False,
-        strip_whitespace=True,
-        use_space_around_operators=True,
+        sql_text, reindent=True, indent_width=4, keyword_case="upper",
+        strip_comments=False, strip_whitespace=True, use_space_around_operators=True,
     )
-
-    formatted_sql = _force_uppercase_types_and_constraints(formatted_sql)
-    formatted_sql = _format_create_table_blocks(formatted_sql)
-    formatted_sql = _format_insert_statements(formatted_sql)
-    formatted_sql = _remove_redundant_blank_lines(formatted_sql)
-    formatted_sql = _normalize_whitespace(formatted_sql)
-
     return formatted_sql.strip()
 
+def analyze_sql_query(sql: str) -> dict:
+    warnings = []
+    statements = sqlparse.parse(sql)
+    rules = [SelectStarRule(), MissingWhereRule(), UnfilteredSelectRule(), ImplicitJoinRule()]
+    
+    score = 100
+    complexity_points = 0
+    
+    for stmt in statements:
+        sql_text = str(stmt)
+        complexity_points += sql_text.upper().count("JOIN")
+        complexity_points += sql_text.upper().count("SELECT") - 1 
+        
+        for rule in rules:
+            result = rule.analyze(stmt, sql_text)
+            if result:
+                warnings.append(result)
+                if result['type'] == 'danger': score -= 30
+                elif result['type'] == 'warning': score -= 15
+                elif result['type'] == 'info': score -= 5
 
-def _force_uppercase_types_and_constraints(sql: str) -> str:
-    sorted_keywords = sorted(SQL_FORMAT_KEYWORDS, key=len, reverse=True)
-    pattern = re.compile(
-        r"\b(" + r"|".join(re.escape(token) for token in sorted_keywords) + r")\b",
-        flags=re.IGNORECASE,
-    )
-    return pattern.sub(lambda match: match.group(1).upper(), sql)
+    score = max(0, min(100, score))
+    level = "Optimizado" if score > 85 else "Requiere Revisión" if score > 60 else "Crítico"
 
-
-def _remove_redundant_blank_lines(sql: str) -> str:
-    return re.sub(r"\n{3,}", "\n\n", sql)
-
-
-def _normalize_whitespace(sql: str) -> str:
-    cleaned = re.sub(r"[ \t]+$", "", sql, flags=re.MULTILINE)
-    cleaned = re.sub(r"\s+;", ";", cleaned)
-    cleaned = re.sub(r"\n\s+\n", "\n\n", cleaned)
-    return cleaned
-
-
-def _split_top_level_comma_separated(value: str) -> List[str]:
-    parts: List[str] = []
-    current: List[str] = []
-    depth = 0
-    in_single_quote = False
-    in_double_quote = False
-    escape = False
-
-    for char in value:
-        if escape:
-            current.append(char)
-            escape = False
-            continue
-
-        if char == "\\":
-            current.append(char)
-            escape = True
-            continue
-
-        if char == "'" and not in_double_quote:
-            in_single_quote = not in_single_quote
-        elif char == '"' and not in_single_quote:
-            in_double_quote = not in_double_quote
-        elif not in_single_quote and not in_double_quote:
-            if char == "(":
-                depth += 1
-            elif char == ")":
-                depth = max(depth - 1, 0)
-            elif char == "," and depth == 0:
-                parts.append("".join(current))
-                current = []
-                continue
-
-        current.append(char)
-
-    if current:
-        parts.append("".join(current))
-
-    return parts
-
-
-def _find_matching_parenthesis(text: str, open_index: int) -> Optional[int]:
-    depth = 0
-    in_single_quote = False
-    in_double_quote = False
-    escape = False
-
-    for idx in range(open_index, len(text)):
-        char = text[idx]
-
-        if escape:
-            escape = False
-            continue
-
-        if char == "\\":
-            escape = True
-            continue
-
-        if char == "'" and not in_double_quote:
-            in_single_quote = not in_single_quote
-        elif char == '"' and not in_single_quote:
-            in_double_quote = not in_double_quote
-        elif not in_single_quote and not in_double_quote:
-            if char == "(":
-                depth += 1
-            elif char == ")":
-                depth -= 1
-                if depth == 0:
-                    return idx
-
-    return None
-
-
-def _format_create_table_blocks(sql: str) -> str:
-    output: List[str] = []
-    cursor = 0
-    pattern = re.compile(r"CREATE\s+TABLE\s+[^(]*\(", flags=re.IGNORECASE)
-
-    while True:
-        match = pattern.search(sql, cursor)
-        if not match:
-            break
-
-        start = match.start()
-        open_paren_index = sql.find("(", match.end() - 1)
-        if open_paren_index == -1:
-            break
-
-        close_paren_index = _find_matching_parenthesis(sql, open_paren_index)
-        if close_paren_index is None:
-            break
-
-        output.append(sql[cursor:start])
-        block = sql[start : close_paren_index + 1]
-        output.append(_format_create_table_block(block))
-        cursor = close_paren_index + 1
-
-    output.append(sql[cursor:])
-    return "".join(output)
-
-
-def _format_create_table_block(block: str) -> str:
-    open_paren = block.index("(")
-    header = block[: open_paren + 1].strip()
-    body = block[open_paren + 1 : -1].strip()
-
-    if not body:
-        return f"{header}\n)"
-
-    parts = _split_top_level_comma_separated(body)
-    formatted_body = ",\n".join(" " * 4 + part.strip() for part in parts if part.strip())
-
-    return f"{header}\n{formatted_body}\n)"
-
-
-def _format_insert_statements(sql: str) -> str:
-    sql = _format_insert_column_lists(sql)
-    sql = _format_insert_values(sql)
-    return sql
-
-
-def _format_insert_column_lists(sql: str) -> str:
-    output: List[str] = []
-    cursor = 0
-    pattern = re.compile(r"INSERT\s+INTO\s+[^\(]*\(", flags=re.IGNORECASE)
-
-    while True:
-        match = pattern.search(sql, cursor)
-        if not match:
-            break
-
-        start = match.start()
-        open_paren_index = sql.find("(", match.end() - 1)
-        if open_paren_index == -1:
-            break
-
-        close_paren_index = _find_matching_parenthesis(sql, open_paren_index)
-        if close_paren_index is None:
-            break
-
-        output.append(sql[cursor:start])
-        block = sql[start : close_paren_index + 1]
-        output.append(_format_insert_column_block(block))
-        cursor = close_paren_index + 1
-
-    output.append(sql[cursor:])
-    return "".join(output)
-
-
-def _format_insert_column_block(block: str) -> str:
-    open_paren = block.index("(")
-    header = block[: open_paren + 1].strip()
-    body = block[open_paren + 1 : -1].strip()
-
-    if not body:
-        return f"{header}\n)"
-
-    columns = _split_top_level_comma_separated(body)
-    formatted_columns = ",\n".join(" " * 4 + column.strip() for column in columns if column.strip())
-
-    return f"{header}\n{formatted_columns}\n)"
-
-
-def _format_insert_values(sql: str) -> str:
-    output: List[str] = []
-    cursor = 0
-    pattern = re.compile(r"VALUES\s*\(", flags=re.IGNORECASE)
-
-    while True:
-        match = pattern.search(sql, cursor)
-        if not match:
-            break
-
-        start = match.start()
-        open_paren_index = sql.find("(", match.end() - 1)
-        if open_paren_index == -1:
-            break
-
-        close_paren_index = _find_matching_parenthesis(sql, open_paren_index)
-        if close_paren_index is None:
-            break
-
-        output.append(sql[cursor:start])
-        block = sql[start : close_paren_index + 1]
-        output.append(_format_values_block(block))
-        cursor = close_paren_index + 1
-
-    output.append(sql[cursor:])
-    return "".join(output)
-
-
-def _format_values_block(block: str) -> str:
-    open_paren = block.index("(")
-    prefix = block[:open_paren].strip()
-    body = block[open_paren + 1 : -1].strip()
-
-    if not body:
-        return f"{prefix}()"
-
-    tuples = _split_top_level_comma_separated(body)
-    formatted_items = []
-
-    for item in tuples:
-        item_str = item.strip()
-        if item_str.startswith("(") and item_str.endswith(")"):
-            inner = item_str[1:-1].strip()
-            values = _split_top_level_comma_separated(inner)
-            if len(values) > 1:
-                formatted_values = ",\n".join(" " * 8 + value.strip() for value in values if value.strip())
-                formatted_items.append(" " * 4 + "(\n" + formatted_values + "\n" + " " * 4 + ")")
-            else:
-                formatted_items.append(" " * 4 + item_str)
-        else:
-            formatted_items.append(" " * 4 + item_str)
-
-    return f"{prefix}\n" + ",\n".join(formatted_items)
+    return {
+        "score": score,
+        "level": level,
+        "stats": {
+            "statements": len(statements),
+            "complexity": "Alta" if complexity_points > 3 else "Media" if complexity_points > 0 else "Baja"
+        },
+        "warnings": warnings
+    }

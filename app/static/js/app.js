@@ -500,8 +500,8 @@ function getPreferredTheme() {
         return saved;
     }
 
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    return media.matches ? 'dark' : 'light';
+    // Forzamos el modo oscuro por defecto para TODOS los usuarios nuevos
+    return 'dark';
 }
 
 function initThemeToggle() {

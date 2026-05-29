@@ -12,50 +12,105 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" defer></script>
+
+    <style>
+        /* Ajustes adaptables para la barra superior (Modo Claro/Oscuro dinámico) */
+        .topbar {
+            /* var(--surface) toma el color de fondo definido en tu styles.css para cada modo */
+            background: var(--surface) !important; 
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-decoration: none;
+        }
+        
+        .brand__logo {
+            height: 45px;
+            border-radius: 2px;
+        }
+        
+        .brand__text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            /* var(--text) cambia de blanco a negro según el modo */
+            color: var(--text); 
+            letter-spacing: -0.5px;
+        }
+
+        /* Botón de tema adaptable */
+        .theme-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .theme-toggle-btn:hover {
+            opacity: 0.7;
+        }
+    </style>
 </head>
 <body class="app-shell">
-    <!-- Main Navigation -->
+    <script>
+        const savedTheme = localStorage.getItem('ilovebd-theme');
+        if (!savedTheme || savedTheme === 'dark') {
+            document.body.classList.add('dark');
+        }
+    </script>
     <nav class="topbar" role="navigation" aria-label="Navegación principal">
-        <div class="topbar__inner container">
+        <div class="topbar__inner container" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem;">
+            
             <a href="/" class="brand" aria-label="iLoveBD - Volver al inicio">
-                <img src="{{ url_for('static', filename='images/LogoArriba.jpeg') }}" alt="iLoveBD logo" class="brand__logo" />
+                <img src="{{ url_for('static', filename='images/LogoArriba1.png') }}" alt="iLoveBD logo" class="brand__logo" />
                 <span class="brand__text">iLoveBD</span>
             </a>
 
+            {% if not is_home %}
             <button id="mobile-menu-toggle" class="menu-toggle" type="button" aria-label="Alternar menú" aria-expanded="false" aria-controls="nav-menu">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
             </button>
 
             <div class="nav-links" id="nav-menu">
-                <a href="/formatter" class="nav-link">Formateador SQL</a>
+                <a href="/formatter" class="nav-link">SQL Analyzer</a>
                 <a href="/csv-to-sql" class="nav-link">CSV → SQL</a>
                 <a href="/generator" class="nav-link">Generador SQL</a>
                 <a href="/table-size" class="nav-link">Calculadora de Tablas</a>
                 <a href="/normalization" class="nav-link">Normalización</a>
                 <a href="/optimizer" class="nav-link">SQL Optimizer</a>
             </div>
+            {% endif %}
 
             <div class="topbar__actions">
-                <button id="theme-toggle" class="btn btn--tertiary btn--sm" type="button" aria-label="Cambiar tema">
-                    <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+                <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="Cambiar tema">
+                    <span class="theme-toggle__icon" style="font-size: 1.2rem;" aria-hidden="true">🌙</span>
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Page Content -->
     <main class="page-content">
         <div class="container page-container">
             {% block content %}{% endblock %}
         </div>
     </main>
 
-    <!-- Toast Container (para notificaciones) -->
     <div id="toast-container"></div>
 
-    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

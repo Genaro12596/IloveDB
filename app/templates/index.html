@@ -1,89 +1,309 @@
 {% extends 'base.html' %}
+{% set is_home = true %}
 
 {% block content %}
-<div class="home-shell">
-    <section class="hero hero--compact">
-        <div class="hero__content">
-            <h1>Lo que necesitas para SQL en un solo lugar</h1>
-            <p class="hero__description">Formatea SQL, convierte archivos CSV, genera consultas y optimiza bases de datos con facilidad.</p>
+<style>
+    /* Eliminamos .app-shell para que tu styles.css controle el fondo global */
 
+    /* Animación de entrada fluida */
+    @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(40px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Animación de la ventana de código */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Layout de 2 Columnas */
+    .hero-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 2rem 2rem 4rem 2rem;
+        gap: 4rem;
+        animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .hero-text { flex: 1; text-align: left; }
+
+    .hero-text h1 {
+        font-size: clamp(3rem, 5vw, 4.5rem);
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        background: linear-gradient(to right, #60a5fa, #c084fc, #f472b6);
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-text p {
+        font-size: 1.25rem;
+        color: var(--muted); /* Adaptable */
+        max-width: 600px;
+        line-height: 1.6;
+    }
+
+    .hero-visual {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    /* Ventana Mockup Adaptable */
+    .mockup-window {
+        background: var(--surface); /* Adaptable */
+        border: 1px solid var(--border); /* Adaptable */
+        border-radius: 16px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .mockup-header {
+        background: rgba(128, 128, 128, 0.1); /* Gris translúcido funciona en ambos modos */
+        padding: 0.8rem 1rem;
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    .mockup-body {
+        padding: 1.5rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: var(--text); /* Adaptable */
+        line-height: 1.6;
+    }
+
+    /* Grid y Tarjetas Adaptables */
+    .tool-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem 5rem 2rem;
+    }
+
+    .tool-card {
+        background: var(--surface); /* Adaptable */
+        border: 1px solid var(--border); /* Adaptable */
+        border-radius: 24px;
+        padding: 2rem;
+        text-decoration: none;
+        color: var(--text); /* Adaptable */
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity: 0;
+        animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tool-card:nth-child(1) { animation-delay: 0.1s; }
+    .tool-card:nth-child(2) { animation-delay: 0.2s; }
+    .tool-card:nth-child(3) { animation-delay: 0.3s; }
+    .tool-card:nth-child(4) { animation-delay: 0.4s; }
+    .tool-card:nth-child(5) { animation-delay: 0.5s; }
+    .tool-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .tool-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        border-color: #a855f7;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    .tool-card__icon {
+        width: 54px; height: 54px; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 1.5rem; color: white;
+    }
+    .tool-card__icon svg { width: 28px; height: 28px; }
+
+    .icon--violet { background: linear-gradient(135deg, #6366f1, #a855f7); }
+    .icon--cyan { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+    .icon--green { background: linear-gradient(135deg, #10b981, #059669); }
+    .icon--pink { background: linear-gradient(135deg, #ec4899, #e11d48); }
+
+    .tool-card h3 {
+        margin: 0 0 0.8rem 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text); /* Adaptable */
+    }
+
+    .tool-card p {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--muted); /* Adaptable */
+        line-height: 1.5;
+    }
+
+    /* Caja de Ejemplo Adaptable */
+    .example-box {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: rgba(128, 128, 128, 0.06); /* Gris suave para ambos modos */
+        border-radius: 12px;
+        border-left: 3px solid rgba(128, 128, 128, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        flex-grow: 1; 
+        justify-content: flex-end;
+    }
+
+    .example-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: var(--muted);
+    }
+
+    .example-text {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem !important;
+        color: #8b5cf6 !important; /* Púrpura que contrasta en blanco y negro */
+    }
+
+    .card-arrow {
+        position: absolute;
+        bottom: 2rem;
+        right: 2rem;
+        color: var(--muted);
+        transition: all 0.3s ease;
+    }
+
+    .tool-card:hover .card-arrow {
+        color: #a855f7;
+        transform: translateX(5px);
+    }
+</style>
+
+<div class="home-shell">
+    <section class="hero-container">
+        
+        <div class="hero-text">
+            <h1>Todo tu SQL en un<br>solo ecosistema</h1>
+            <p>Audita, formatea, transpila CSVs y proyecta tu infraestructura de bases de datos de forma profesional y centralizada.</p>
+        </div>
+
+        <div class="hero-visual">
+            <div class="mockup-window">
+                <div class="mockup-header">
+                    <div class="mockup-dot" style="background: #ef4444;"></div>
+                    <div class="mockup-dot" style="background: #f59e0b;"></div>
+                    <div class="mockup-dot" style="background: #10b981;"></div>
+                </div>
+                <div class="mockup-body">
+                    <span style="color: #c084fc;">SELECT</span> id, nombre, email <br>
+                    <span style="color: #c084fc;">FROM</span> tbl_usuarios <br>
+                    <span style="color: #c084fc;">INNER JOIN</span> suscripciones <br>
+                    &nbsp;&nbsp;<span style="color: #c084fc;">ON</span> tbl_usuarios.id = sub.user_id <br>
+                    <span style="color: #c084fc;">WHERE</span> status = <span style="color: #6ee7b7;">'activo'</span>;<br>
+                    <br>
+                    <span style="color: #94a3b8;">-- ✔ Análisis completado (0.012s)</span><br>
+                    <span style="color: #10b981;">-- ✔ Score de rendimiento: 98/100</span>
+                </div>
+            </div>
         </div>
 
     </section>
 
     <section class="section tools-section" id="tools">
         <div class="tool-grid">
+            
             <a href="/formatter" class="tool-card">
-                <div class="tool-card__icon tool-card__icon--violet">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="tool-card__icon icon--violet">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </div>
-                <div>
-                    <h3>Formateador SQL</h3>
-                    <p>Ordena y limpia tus consultas SQL en segundos con estilo profesional.</p>
-                    <p class="tool-card__hint">Ejemplo: pega tu consulta SQL desordenada para obtener una versión bien indentada.</p>
+                <h3>Analizador de SQL y formateo</h3>
+                <p>Auditoría automática de sintaxis, detección de malas prácticas y estandarización de código.</p>
+                <div class="example-box" style="border-left-color: #a855f7;">
+                    <span class="example-label">💡 Ejemplo de uso</span>
+                    <span class="example-text">Ingresa un SELECT * y recibe advertencias de rendimiento.</span>
                 </div>
-                <span class="tool-card__cta">Abrir</span>
+                <div class="card-arrow">→</div>
             </a>
 
             <a href="/csv-to-sql" class="tool-card">
-                <div class="tool-card__icon tool-card__icon--cyan">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="tool-card__icon icon--cyan">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </div>
-                <div>
-                    <h3>CSV → SQL</h3>
-                    <p>Convierte archivos CSV en sentencias SQL listas para ejecutar.</p>
-                    <p class="tool-card__hint">Ejemplo: pega filas CSV con cabeceras para obtener INSERTS automáticos.</p>
+                <h3>CSV → SQL Studio</h3>
+                <p>Inferencia dinámica de tipos y conversión de datos masivos en sentencias listas para ejecutar.</p>
+                <div class="example-box" style="border-left-color: #06b6d4;">
+                    <span class="example-label">💡 Ejemplo de uso</span>
+                    <span class="example-text">Pega filas CSV con cabeceras para obtener INSERTS automáticos.</span>
                 </div>
-                <span class="tool-card__cta">Abrir</span>
+                <div class="card-arrow">→</div>
             </a>
 
             <a href="/table-size" class="tool-card">
-                <div class="tool-card__icon tool-card__icon--cyan">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 10h14M5 14h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="tool-card__icon icon--green">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="14" height="12" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M5 10h14M5 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </div>
-                <div>
-                    <h3>Calculadora de tablas</h3>
-                    <p>Estima el tamaño de tus tablas según columnas y registros.</p>
-                    <p class="tool-card__hint">Ejemplo: define columnas, tipos y filas para ver el tamaño total en MB.</p>
+                <h3>DB Storage Sizer</h3>
+                <p>Simulador financiero para estimar costos de infraestructura y proyección de discos en la nube.</p>
+                <div class="example-box" style="border-left-color: #10b981;">
+                    <span class="example-label">💡 Ejemplo de uso</span>
+                    <span class="example-text">Define columnas, tipos y filas para ver tu proyección a 12 meses.</span>
                 </div>
-                <span class="tool-card__cta">Abrir</span>
+                <div class="card-arrow">→</div>
             </a>
 
             <a href="/normalization" class="tool-card">
-                <div class="tool-card__icon tool-card__icon--violet">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 8h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 4h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="tool-card__icon icon--violet">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 8h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 4h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </div>
-                <div>
-                    <h3>Normalización</h3>
-                    <p>Analiza 1FN, 2FN y 3FN para mejorar tu modelo de datos.</p>
-                    <p class="tool-card__hint">Ejemplo: describe tus columnas y relaciones para recibir consejos de normalización.</p>
+                <h3>Normalización</h3>
+                <p>Analiza reglas de 1FN, 2FN y 3FN para optimizar tu modelo relacional y eliminar dependencias.</p>
+                <div class="example-box" style="border-left-color: #a855f7;">
+                    <span class="example-label">💡 Ejemplo de uso</span>
+                    <span class="example-text">Describe tus relaciones para recibir consejos de normalización.</span>
                 </div>
-                <span class="tool-card__cta">Abrir</span>
+                <div class="card-arrow">→</div>
             </a>
 
             <a href="/generator" class="tool-card">
-                <div class="tool-card__icon tool-card__icon--violet">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 4v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 14v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="tool-card__icon icon--pink">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 4v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 14v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </div>
-                <div>
-                    <h3>Generador SQL</h3>
-                    <p>Genera consultas personalizadas sin escribir la sintaxis completa.</p>
-                    <p class="tool-card__hint">Ejemplo: tabla: usuarios, columnas: id, name, email → SELECT generado.</p>
+                <h3>Generador SQL</h3>
+                <p>Construye DDL y esquemas relacionales complejos de manera interactiva sin escribir a mano.</p>
+                <div class="example-box" style="border-left-color: #ec4899;">
+                    <span class="example-label">💡 Ejemplo de uso</span>
+                    <span class="example-text">Tabla: usuarios | cols: id, email → Obtén el CREATE table completo.</span>
                 </div>
-                <span class="tool-card__cta">Abrir</span>
+                <div class="card-arrow">→</div>
             </a>
 
             <a href="/optimizer" class="tool-card">
-                <div class="tool-card__icon tool-card__icon--green">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7l9-5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 12l6-3.5M12 12l-6-3.5M12 12v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <div class="tool-card__icon icon--green">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7l9-5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 12l6-3.5M12 12l-6-3.5M12 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </div>
-                <div>
-                    <h3>SQL Optimizer</h3>
-                    <p>Detecta problemas en tus consultas SQL y sugiere optimizaciones.</p>
-                    <p class="tool-card__hint">Ejemplo: SELECT * FROM users → Detecta 16+ anti-patterns con sugerencias.</p>
+                <h3>Engine Optimizer</h3>
+                <p>Detecta cuellos de botella en tiempo real. Previene transacciones peligrosas y Full Table Scans.</p>
+                <div class="example-box" style="border-left-color: #10b981;">
+                    <span class="example-label">💡 Ejemplo de uso</span>
+                    <span class="example-text">Pega un UPDATE sin WHERE y detecta el anti-patrón crítico.</span>
                 </div>
-                <span class="tool-card__cta">Abrir</span>
+                <div class="card-arrow">→</div>
             </a>
+
         </div>
     </section>
 </div>

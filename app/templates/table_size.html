@@ -1,54 +1,341 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<section class="section section-page">
-    <div class="section__header">
-        <h2>Estimación de tamaño de tabla en base a columnas y registros.</h2>
-        <p class="section__subtitle">Define columnas, tipos y registros estimados para ver el tamaño aproximado en KB, MB y GB.</p>
-    </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <div class="panel">
-        <div class="panel__grid">
-            <div class="panel__field panel__field--full">
-                <label class="field-label" for="rows-count">Cantidad estimada de registros</label>
-                <input id="rows-count" type="number" min="1" step="1" class="input" placeholder="ej. 10000" value="1000" />
-            </div>
-            <div class="panel__field panel__field--full">
-                <label class="field-label" for="sql-input">Pega tu script CREATE TABLE</label>
-                <textarea id="sql-input" class="input input--textarea" rows="10" placeholder="CREATE TABLE usuarios (\n  id INT PRIMARY KEY,\n  nombre VARCHAR(100),\n  fecha_registro DATE\n);"></textarea>
-            </div>
+<div class="tool-page">
+    <div id="ui-toast" style="display:none; position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 8px; color: white; font-weight: 600; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: opacity 0.3s;"></div>
+
+    <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 800; margin: 0;">DB Storage Sizer</h1>
+            <p style="color: var(--muted); margin: 0.5rem 0 0 0;">Proyección de infraestructura y estimación de peso por tabla (InnoDB aprox).</p>
         </div>
-
-        <div class="panel__footer panel__footer--space">
-            <button type="button" onclick="resetTableSize()" class="button button--secondary">Reset</button>
-            <button type="button" onclick="loadTableSizeExample()" class="button button--secondary">📋 Ejemplo</button>
-            <button type="button" onclick="calculateTableSize()" class="button button--primary">Calcular tamaño</button>
+        <div>
+            <button id="btn-example" style="padding: 0.6rem 1.2rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📋 Cargar Esquema de Prueba
+            </button>
         </div>
     </div>
 
-    <div id="table-size-error" class="form-error" aria-live="polite"></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--text);">Volumen Estimado (Nº de Registros)</label>
+                <input id="rows-count" type="number" min="1" step="1000" placeholder="Ej. 1000000" value="10000" style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(128, 128, 128, 0.05); font-size: 1.1rem; font-family: monospace;">
+            </div>
 
-    <div class="output-card" id="table-size-output" hidden>
-        <div class="output-card__header">
-            <h3>Resultado estimado</h3>
-            <p>Revisa el total y el desglose por columna para entender tu tabla.</p>
-        </div>
-        <div class="table-size-summary">
-            <div>
-                <strong id="summary-rows">Registros:</strong>
+            <div style="flex-grow: 1; display: flex; flex-direction: column;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--text);">Script de Creación (CREATE TABLE)</label>
+                <textarea id="sql-input" style="flex-grow: 1; min-height: 250px; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(128, 128, 128, 0.05); color: var(--text); font-family: 'Courier New', monospace; font-size: 0.9rem; resize: vertical; outline: none;" placeholder="CREATE TABLE compras (&#10;  id INT PRIMARY KEY,&#10;  usuario_id INT,&#10;  monto DECIMAL(10,2),&#10;  fecha TIMESTAMP&#10;);"></textarea>
             </div>
-            <div>
-                <strong id="summary-row-size">Tamaño por fila:</strong>
-            </div>
-            <div>
-                <strong id="summary-total-size">Tamaño total:</strong>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button id="btn-calculate" style="flex: 1; padding: 0.8rem; background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                    Calcular Almacenamiento
+                </button>
+                <button id="btn-reset" style="padding: 0.8rem 1.5rem; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    Limpiar
+                </button>
             </div>
         </div>
-        <div class="table-size-breakdown" id="table-size-breakdown"></div>
-        <div class="panel__footer panel__footer--space">
-            <button id="copy-table-btn" type="button" onclick="copyTableSizeResult()" class="button button--secondary">📋 Copiar Tabla</button>
-            <button type="button" onclick="downloadTableSizeCSV()" class="button button--secondary">💾 Descargar CSV</button>
+
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
+            
+            <div id="output-area" style="display: none; flex-direction: column; flex-grow: 1;">
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <span style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">Peso por Fila (Inc. Overhead)</span>
+                        <div id="metric-row-size" style="font-size: 1.8rem; font-weight: 800; color: #38bdf8; margin-top: 0.3rem;">--</div>
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <span style="font-size: 0.8rem; color: #10b981; text-transform: uppercase;">Tamaño Total Estimado</span>
+                        <div id="metric-total-size" style="font-size: 1.8rem; font-weight: 800; color: #10b981; margin-top: 0.3rem;">--</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #0f172a; border-radius: 8px; border: 1px solid var(--border);">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase;">
+                        Proyección de Crecimiento (12 Meses)
+                    </h3>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Simulador de Servidor (Disco)</h3>
+                    <select id="disk-capacity" style="background: #0f172a; border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; outline: none;">
+                        <option value="1073741824">Disco Pequeño (1 GB)</option>
+                        <option value="10737418240" selected>Disco Estándar (10 GB)</option>
+                        <option value="53687091200">Disco Mediano (50 GB)</option>
+                        <option value="1099511627776">Servidor Dedicado (1 TB)</option>
+                    </select>
+                </div>
+                
+                <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--border); border-radius: 8px; background: #0f172a; padding: 1.5rem; position: relative;">
+                    
+                    <div style="position: relative; width: 220px; height: 220px;">
+                        <canvas id="diskChart"></canvas>
+                        
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                            <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 0.2rem; filter: drop-shadow(0 0 10px rgba(56,189,248,0.3));">💽</div>
+                            <div id="disk-percentage" style="font-size: 1.8rem; font-weight: 900; color: #f8fafc; line-height: 1;">0%</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.2rem;">Ocupado</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.85rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #38bdf8;" id="legend-color-used"></span>
+                            <span style="color: #cbd5e1;">Tabla SQL: <strong id="legend-used" style="color: white;">--</strong></span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.05);"></span>
+                            <span style="color: #cbd5e1;">Libre: <strong id="legend-free" style="color: white;">--</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="empty-state" style="text-align: center; color: var(--muted); padding: 4rem 0; margin: auto;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.7;">🗄️</div>
+                <h3 style="margin:0 0 0.5rem 0; color: var(--text); font-size: 1.2rem;">Calculadora Inactiva</h3>
+                <p style="margin:0; font-size: 0.95rem;">Ingresa tu DDL y cantidad de registros para proyectar el espacio en disco.</p>
+            </div>
         </div>
     </div>
-</section>
+</div>
+
+<script>
+// ==========================================
+// VARIABLES GLOBALES Y FUNCIONES BASE
+// ==========================================
+let growthChart = null; 
+let diskChart = null;
+let currentTotalBytes = 0; 
+
+function showToast(message, type = 'error') {
+    const toast = document.getElementById('ui-toast');
+    toast.textContent = message;
+    toast.style.background = type === 'error' ? '#ef4444' : '#10b981';
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 300);
+    }, 3000);
+}
+
+// Renderizado de Gráfica de Crecimiento
+function renderChart(baseRows, rowBytes) {
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    const labels = [];
+    const data = [];
+    
+    const maxBytes = (baseRows * 12) * rowBytes * 1.15;
+    let divider = 1;
+    let unit = 'B';
+    if (maxBytes > 1024 ** 3) { divider = 1024 ** 3; unit = 'GB'; }
+    else if (maxBytes > 1024 ** 2) { divider = 1024 ** 2; unit = 'MB'; }
+    else if (maxBytes > 1024) { divider = 1024; unit = 'KB'; }
+
+    for(let i = 1; i <= 12; i++) {
+        labels.push(`Mes ${i}`);
+        const currentBytes = (baseRows * i) * rowBytes * 1.15;
+        data.push((currentBytes / divider).toFixed(2));
+    }
+
+    if(growthChart) growthChart.destroy(); 
+
+    growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `Tamaño Estimado (${unit})`,
+                data: data,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#0f172a',
+                pointBorderColor: '#38bdf8',
+                fill: true,
+                tension: 0.3 
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) { return `${context.parsed.y} ${unit}`; }
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8' }
+                }
+            }
+        }
+    });
+}
+
+// Renderizado de Gráfica de Disco
+function renderDiskChart(usedBytes) {
+    const capacitySelect = document.getElementById('disk-capacity');
+    const maxBytes = parseInt(capacitySelect.value);
+    
+    let freeBytes = maxBytes - usedBytes;
+    if (freeBytes < 0) freeBytes = 0; 
+
+    const percentage = Math.min((usedBytes / maxBytes) * 100, 100).toFixed(2);
+    document.getElementById('disk-percentage').textContent = `${percentage}%`;
+    
+    const formatSize = (bytes) => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024**2) return (bytes/1024).toFixed(2) + ' KB';
+        if (bytes < 1024**3) return (bytes/1024**2).toFixed(2) + ' MB';
+        return (bytes/1024**3).toFixed(2) + ' GB';
+    };
+
+    document.getElementById('legend-used').textContent = formatSize(usedBytes);
+    document.getElementById('legend-free').textContent = formatSize(freeBytes);
+
+    let chartColor = '#38bdf8'; 
+    if (percentage > 90) chartColor = '#ef4444'; 
+    else if (percentage > 70) chartColor = '#f59e0b'; 
+
+    document.getElementById('legend-color-used').style.background = chartColor;
+
+    const ctx = document.getElementById('diskChart').getContext('2d');
+
+    if(diskChart) diskChart.destroy(); 
+
+    diskChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Espacio Ocupado', 'Espacio Libre'],
+            datasets: [{
+                data: [usedBytes, freeBytes],
+                backgroundColor: [chartColor, 'rgba(255,255,255,0.05)'],
+                borderColor: ['rgba(0,0,0,0)', 'rgba(0,0,0,0)'],
+                borderWidth: 0,
+                borderRadius: [4, 4], 
+                cutout: '80%' 
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) { return ` ${context.label}: ${formatSize(context.raw)}`; }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+}
+
+// ==========================================
+// INICIALIZACIÓN Y EVENTOS
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Selector de Disco Duro
+    document.getElementById('disk-capacity').addEventListener('change', () => {
+        if (currentTotalBytes > 0) {
+            renderDiskChart(currentTotalBytes);
+        }
+    });
+
+    // 2. Botón Cargar Ejemplo
+    document.getElementById('btn-example').addEventListener('click', () => {
+        document.getElementById('rows-count').value = '5000000';
+        document.getElementById('sql-input').value = 'CREATE TABLE transacciones (\n  id BIGINT PRIMARY KEY,\n  usuario_id INT NOT NULL,\n  tipo_operacion VARCHAR(20),\n  monto DOUBLE,\n  es_internacional BOOLEAN,\n  fecha_creacion DATETIME\n);';
+    });
+
+    // 3. Botón Limpiar UI
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        document.getElementById('rows-count').value = '10000';
+        document.getElementById('sql-input').value = '';
+        document.getElementById('output-area').style.display = 'none';
+        document.getElementById('empty-state').style.display = 'block';
+        currentTotalBytes = 0;
+    });
+
+    // 4. Botón Ejecutar Cálculo
+    document.getElementById('btn-calculate').addEventListener('click', async function() {
+        const rows = document.getElementById('rows-count').value;
+        const sqlInput = document.getElementById('sql-input').value.trim();
+        
+        if (!sqlInput) {
+            showToast('⚠️ Pega un script CREATE TABLE válido.');
+            return;
+        }
+
+        const btn = this;
+        const originalText = btn.innerText;
+        btn.innerText = 'Calculando...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        try {
+            const response = await fetch('/api/table-size', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rows: rows, create_table_sql: sqlInput })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok || data.error) throw new Error(data.error || 'Error del servidor');
+            
+            const res = data.result;
+
+            // Mostrar el dashboard
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('output-area').style.display = 'flex';
+
+            // Actualizar métricas de texto
+            document.getElementById('metric-row-size').textContent = res.row_size.formatted;
+            document.getElementById('metric-total-size').textContent = res.total_size.formatted;
+
+            // Dibujar gráfica de crecimiento
+            renderChart(parseInt(res.rows), res.row_size.bytes);
+            
+            // Dibujar simulador de disco
+            currentTotalBytes = res.total_size.bytes; 
+            renderDiskChart(currentTotalBytes);
+
+        } catch (error) {
+            console.error('Error:', error);
+            showToast(error.message, 'error');
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    });
+});
+</script>
 {% endblock %}
