@@ -266,12 +266,12 @@ async function downloadCrudZip() {
         const blob = await response.blob();
         const filename = 'crud_generator_package.zip';
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = filename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
         window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Error:', error);
@@ -282,7 +282,7 @@ async function downloadCrudZip() {
 
 function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.replace(/[&<>"']/g, c => map[c]);
+    return text.replace(/[&<>"']/g, character => map[character]);
 }
 </script>
 {% endblock %}

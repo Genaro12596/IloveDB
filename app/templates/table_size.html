@@ -111,9 +111,6 @@
 </div>
 
 <script>
-// ==========================================
-// VARIABLES GLOBALES Y FUNCIONES BASE
-// ==========================================
 let growthChart = null; 
 let diskChart = null;
 let currentTotalBytes = 0; 
@@ -130,7 +127,6 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
-// Renderizado de Gráfica de Crecimiento
 function renderChart(baseRows, rowBytes) {
     const ctx = document.getElementById('growthChart').getContext('2d');
     const labels = [];
@@ -143,9 +139,9 @@ function renderChart(baseRows, rowBytes) {
     else if (maxBytes > 1024 ** 2) { divider = 1024 ** 2; unit = 'MB'; }
     else if (maxBytes > 1024) { divider = 1024; unit = 'KB'; }
 
-    for(let i = 1; i <= 12; i++) {
-        labels.push(`Mes ${i}`);
-        const currentBytes = (baseRows * i) * rowBytes * 1.15;
+    for(let month = 1; month <= 12; month++) {
+        labels.push(`Mes ${month}`);
+        const currentBytes = (baseRows * month) * rowBytes * 1.15;
         data.push((currentBytes / divider).toFixed(2));
     }
 
@@ -193,7 +189,6 @@ function renderChart(baseRows, rowBytes) {
     });
 }
 
-// Renderizado de Gráfica de Disco
 function renderDiskChart(usedBytes) {
     const capacitySelect = document.getElementById('disk-capacity');
     const maxBytes = parseInt(capacitySelect.value);
@@ -256,25 +251,19 @@ function renderDiskChart(usedBytes) {
     });
 }
 
-// ==========================================
-// INICIALIZACIÓN Y EVENTOS
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
 
-    // 1. Selector de Disco Duro
     document.getElementById('disk-capacity').addEventListener('change', () => {
         if (currentTotalBytes > 0) {
             renderDiskChart(currentTotalBytes);
         }
     });
 
-    // 2. Botón Cargar Ejemplo
     document.getElementById('btn-example').addEventListener('click', () => {
         document.getElementById('rows-count').value = '5000000';
         document.getElementById('sql-input').value = 'CREATE TABLE transacciones (\n  id BIGINT PRIMARY KEY,\n  usuario_id INT NOT NULL,\n  tipo_operacion VARCHAR(20),\n  monto DOUBLE,\n  es_internacional BOOLEAN,\n  fecha_creacion DATETIME\n);';
     });
 
-    // 3. Botón Limpiar UI
     document.getElementById('btn-reset').addEventListener('click', () => {
         document.getElementById('rows-count').value = '10000';
         document.getElementById('sql-input').value = '';
@@ -283,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTotalBytes = 0;
     });
 
-    // 4. Botón Ejecutar Cálculo
     document.getElementById('btn-calculate').addEventListener('click', async function() {
         const rows = document.getElementById('rows-count').value;
         const sqlInput = document.getElementById('sql-input').value.trim();
@@ -310,21 +298,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!response.ok || data.error) throw new Error(data.error || 'Error del servidor');
             
-            const res = data.result;
+            const result = data.result;
 
-            // Mostrar el dashboard
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('output-area').style.display = 'flex';
 
-            // Actualizar métricas de texto
-            document.getElementById('metric-row-size').textContent = res.row_size.formatted;
-            document.getElementById('metric-total-size').textContent = res.total_size.formatted;
+            document.getElementById('metric-row-size').textContent = result.row_size.formatted;
+            document.getElementById('metric-total-size').textContent = result.total_size.formatted;
 
-            // Dibujar gráfica de crecimiento
-            renderChart(parseInt(res.rows), res.row_size.bytes);
+            renderChart(parseInt(result.rows), result.row_size.bytes);
             
-            // Dibujar simulador de disco
-            currentTotalBytes = res.total_size.bytes; 
+            currentTotalBytes = result.total_size.bytes; 
             renderDiskChart(currentTotalBytes);
 
         } catch (error) {

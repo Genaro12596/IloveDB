@@ -62,12 +62,18 @@ def _infer_column_type(column_name, type_token):
         length = int(char_match.group(1))
         return f'CHAR({length})', length + 2
 
-    if token in ('INT', 'INTEGER', 'FLOAT'): return token, 4
-    if token in ('BIGINT', 'DATETIME', 'TIMESTAMP', 'DOUBLE'): return token, 8
-    if token == 'SMALLINT': return 'SMALLINT', 2
-    if token in ('BOOLEAN', 'TINYINT'): return 'BOOLEAN', 1
-    if token == 'DATE': return 'DATE', 3
-    if token == 'TEXT': return 'TEXT', 100
+    if token in ('INT', 'INTEGER', 'FLOAT'):
+        return token, 4
+    if token in ('BIGINT', 'DATETIME', 'TIMESTAMP', 'DOUBLE'):
+        return token, 8
+    if token == 'SMALLINT':
+        return 'SMALLINT', 2
+    if token in ('BOOLEAN', 'TINYINT'):
+        return 'BOOLEAN', 1
+    if token == 'DATE':
+        return 'DATE', 3
+    if token == 'TEXT':
+        return 'TEXT', 100
 
     return 'VARCHAR(100)', 102 # Default fallback
 
@@ -91,7 +97,8 @@ def calculate_table_size(rows: int, create_table_sql: str) -> dict:
             continue
 
         parts = clean_line.split()
-        if len(parts) < 2: continue
+        if len(parts) < 2:
+            continue
 
         name = parts[0].strip('`"[]')
         type_token = parts[1]

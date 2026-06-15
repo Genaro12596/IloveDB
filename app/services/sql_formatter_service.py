@@ -30,16 +30,16 @@ class SelectStarRule(SqlRule):
 
 class MissingWhereRule(SqlRule):
     def analyze(self, statement, sql_text: str):
-        stmt_type = statement.get_type()
-        if stmt_type in ['UPDATE', 'DELETE']:
+        statement_type = statement.get_type()
+        if statement_type in ['UPDATE', 'DELETE']:
             has_where = any(isinstance(token, sqlparse.sql.Where) for token in statement.tokens)
             if not has_where:
                 return {
                     "type": "danger",
-                    "title": f"Operación Destructiva ({stmt_type} sin WHERE)",
-                    "message": f"Se detectó un {stmt_type} sin filtros. Esto afectará a TODOS los registros de la tabla.",
+                    "title": f"Operación Destructiva ({statement_type} sin WHERE)",
+                    "message": f"Se detectó un {statement_type} sin filtros. Esto afectará a TODOS los registros de la tabla.",
                     "recommendation": "Agrega siempre una cláusula WHERE usando una clave primaria o índice único.",
-                    "example": f"{stmt_type} tabla SET columna = valor WHERE id = 123;" if stmt_type == 'UPDATE' else f"DELETE FROM tabla WHERE id = 123;"
+                    "example": f"{statement_type} tabla SET columna = valor WHERE id = 123;" if statement_type == 'UPDATE' else f"DELETE FROM tabla WHERE id = 123;"
                 }
         return None
 
@@ -92,13 +92,13 @@ def analyze_sql_query(sql: str) -> dict:
     score = 100
     complexity_points = 0
     
-    for stmt in statements:
-        sql_text = str(stmt)
+    for statement in statements:
+        sql_text = str(statement)
         complexity_points += sql_text.upper().count("JOIN")
         complexity_points += sql_text.upper().count("SELECT") - 1 
         
         for rule in rules:
-            result = rule.analyze(stmt, sql_text)
+            result = rule.analyze(statement, sql_text)
             if result:
                 warnings.append(result)
                 if result['type'] == 'danger': score -= 30

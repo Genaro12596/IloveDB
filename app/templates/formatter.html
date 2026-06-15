@@ -95,7 +95,6 @@ const SQL_EXAMPLES = {
     optimized: "SELECT e.id, e.nombre, d.nombre AS departamento \nFROM empleados e \nINNER JOIN departamentos d ON e.dep_id = d.id \nWHERE e.estado = 'activo';"
 };
 
-// UI Toast Notification System
 function showToast(message, type = 'error') {
     const toast = document.getElementById('ui-toast');
     toast.textContent = message;
@@ -108,12 +107,11 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
-// Inicialización de Eventos (Esto previene el bug de botones que no responden)
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('example-select').addEventListener('change', (e) => {
-        const val = e.target.value;
-        if (val && SQL_EXAMPLES[val]) {
-            document.getElementById("sql-input").value = SQL_EXAMPLES[val];
+    document.getElementById('example-select').addEventListener('change', (event) => {
+        const selectedValue = event.target.value;
+        if (selectedValue && SQL_EXAMPLES[selectedValue]) {
+            document.getElementById("sql-input").value = SQL_EXAMPLES[selectedValue];
         }
     });
 
@@ -124,12 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // UI Loading State (Feedback visual)
-        const btn = this;
-        const originalText = btn.innerText;
-        btn.innerText = 'Analizando...';
-        btn.disabled = true;
-        btn.style.opacity = '0.7';
+        const button = this;
+        const originalText = button.innerText;
+        button.innerText = 'Analizando...';
+        button.disabled = true;
+        button.style.opacity = '0.7';
 
         try {
             const response = await fetch("/api/format-sql", {
@@ -150,10 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('API Error:', error);
             showToast(error.message, 'error');
         } finally {
-            // Restore UI State
-            btn.innerText = originalText;
-            btn.disabled = false;
-            btn.style.opacity = '1';
+            button.innerText = originalText;
+            button.disabled = false;
+            button.style.opacity = '1';
         }
     });
 
@@ -173,10 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderDashboard(data) {
-    // 1. Ocultar Empty State
     document.getElementById("empty-state").style.display = "none";
 
-    // 2. Render Score y Estadísticas
     document.getElementById("dashboard-header").style.display = "flex";
     document.getElementById("score-value").textContent = data.score;
     document.getElementById("stat-complexity").textContent = data.stats.complexity;
@@ -185,27 +179,24 @@ function renderDashboard(data) {
     const badge = document.getElementById("score-badge");
     badge.textContent = data.level;
     
-    // Colores dinámicos
     if (data.score > 85) { badge.style.background = '#064e3b'; badge.style.color = '#34d399'; document.getElementById("score-value").style.color = '#10b981';}
     else if (data.score > 60) { badge.style.background = '#78350f'; badge.style.color = '#fbbf24'; document.getElementById("score-value").style.color = '#f59e0b'; }
     else { badge.style.background = '#7f1d1d'; badge.style.color = '#f87171'; document.getElementById("score-value").style.color = '#ef4444'; }
 
-    // 3. Render Advertencias y Recomendaciones (Paneles Profesionales)
     const analysisContainer = document.getElementById("analysis-container");
     analysisContainer.innerHTML = ''; 
     analysisContainer.style.display = 'flex';
     
     if (data.analysis && data.analysis.length > 0) {
         data.analysis.forEach(warning => {
-            let bg, border, icon;
-            if (warning.type === 'danger') { bg = 'rgba(239, 68, 68, 0.1)'; border = '#ef4444'; icon = '🚨'; } 
-            else if (warning.type === 'warning') { bg = 'rgba(245, 158, 11, 0.1)'; border = '#f59e0b'; icon = '⚠️'; } 
-            else { bg = 'rgba(56, 189, 248, 0.1)'; border = '#38bdf8'; icon = '💡'; }
+            let backgroundColor, border, icon;
+            if (warning.type === 'danger') { backgroundColor = 'rgba(239, 68, 68, 0.1)'; border = '#ef4444'; icon = '🚨'; } 
+            else if (warning.type === 'warning') { backgroundColor = 'rgba(245, 158, 11, 0.1)'; border = '#f59e0b'; icon = '⚠️'; } 
+            else { backgroundColor = 'rgba(56, 189, 248, 0.1)'; border = '#38bdf8'; icon = '💡'; }
 
             const alertDiv = document.createElement('div');
-            alertDiv.style.cssText = `border: 1px solid ${border}; background-color: ${bg}; border-radius: 8px; overflow: hidden;`;
+            alertDiv.style.cssText = `border: 1px solid ${border}; background-color: ${backgroundColor}; border-radius: 8px; overflow: hidden;`;
             
-            // Estructura modular: Problema -> Solución -> Código
             let contentHTML = `
                 <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <strong style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 1rem; color: ${border};">${icon} ${warning.title}</strong>
@@ -227,14 +218,12 @@ function renderDashboard(data) {
         });
     }
 
-    // 4. Render Formateo y Resaltado de Sintaxis
     const formattedSection = document.getElementById("formatted-section");
     formattedSection.style.display = "flex";
     
     const codeBlock = document.getElementById("formatted-result");
     codeBlock.textContent = data.formatted_sql;
     
-    // Forzamos a Highlight.js a procesar el bloque renderizado
     delete codeBlock.dataset.highlighted; 
     hljs.highlightElement(codeBlock);
 }

@@ -92,18 +92,18 @@ async function copyToClipboard(text, elementId = null) {
         
         // Cambiar botón por un momento si existe
         if (elementId) {
-            const btn = document.getElementById(elementId);
-            if (btn) {
-                const originalText = btn.textContent;
-                btn.textContent = '✓ Copiado';
+            const button = document.getElementById(elementId);
+            if (button) {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copiado';
                 setTimeout(() => {
-                    btn.textContent = originalText;
+                    button.textContent = originalText;
                 }, 2000);
             }
         }
         return true;
-    } catch (err) {
-        console.error('Error al copiar:', err);
+    } catch (downloadError) {
+        console.error('Error al copiar:', downloadError);
         showError('Error', 'No se pudo copiar al portapapeles');
         return false;
     }
@@ -137,8 +137,8 @@ function downloadFile(content, filename, mimeType = 'text/plain') {
         URL.revokeObjectURL(url);
         showSuccess('¡Descargado!', `Se descargó ${filename}`);
         return true;
-    } catch (err) {
-        console.error('Error al descargar:', err);
+    } catch (downloadError) {
+        console.error('Error al descargar:', downloadError);
         showError('Error', 'No se pudo descargar el archivo');
         return false;
     }
@@ -162,41 +162,41 @@ function downloadJSON(content, filename = 'data.json') {
    ============================================ */
 
 function setButtonLoading(buttonId, isLoading = true) {
-    const btn = document.getElementById(buttonId);
-    if (!btn) return;
+    const button = document.getElementById(buttonId);
+    if (!button) return;
 
     if (isLoading) {
-        btn.disabled = true;
-        btn.classList.add('btn--loading');
+        button.disabled = true;
+        button.classList.add('btn--loading');
         const spinner = document.createElement('span');
         spinner.className = 'spinner';
         spinner.id = `spinner-${buttonId}`;
-        btn.insertBefore(spinner, btn.firstChild);
+        button.insertBefore(spinner, button.firstChild);
     } else {
-        btn.disabled = false;
-        btn.classList.remove('btn--loading');
-        const spinner = btn.querySelector(`#spinner-${buttonId}`);
+        button.disabled = false;
+        button.classList.remove('btn--loading');
+        const spinner = button.querySelector(`#spinner-${buttonId}`);
         if (spinner) spinner.remove();
     }
 }
 
 function setButtonLoadingText(buttonId, isLoading = true, loadingText = 'Procesando...') {
-    const btn = document.getElementById(buttonId);
-    if (!btn) return;
+    const button = document.getElementById(buttonId);
+    if (!button) return;
 
-    const originalText = btn.getAttribute('data-original-text') || btn.textContent;
-    if (!btn.getAttribute('data-original-text')) {
-        btn.setAttribute('data-original-text', originalText);
+    const originalText = button.getAttribute('data-original-text') || button.textContent;
+    if (!button.getAttribute('data-original-text')) {
+        button.setAttribute('data-original-text', originalText);
     }
 
     if (isLoading) {
-        btn.textContent = loadingText;
-        btn.disabled = true;
-        btn.classList.add('btn--loading');
+        button.textContent = loadingText;
+        button.disabled = true;
+        button.classList.add('btn--loading');
     } else {
-        btn.textContent = originalText;
-        btn.disabled = false;
-        btn.classList.remove('btn--loading');
+        button.textContent = originalText;
+        button.disabled = false;
+        button.classList.remove('btn--loading');
     }
 }
 
@@ -257,11 +257,11 @@ function showInputSuccess(inputId, message) {
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
     
-    const k = 1024;
+    const bytesPerKilobyte = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const unitIndex = Math.floor(Math.log(bytes) / Math.log(bytesPerKilobyte));
     
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(bytesPerKilobyte, unitIndex)) * 100) / 100 + ' ' + sizes[unitIndex];
 }
 
 function formatNumber(num) {
@@ -341,21 +341,21 @@ async function apiFetch(url, options = {}) {
    DEBOUNCE & THROTTLE
    ============================================ */
 
-function debounce(fn, delay = 300) {
+function debounce(callbackFunction, delay = 300) {
     let timeoutId;
     return function(...args) {
         clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn(...args), delay);
+        timeoutId = setTimeout(() => callbackFunction(...args), delay);
     };
 }
 
-function throttle(fn, delay = 300) {
+function throttle(callbackFunction, delay = 300) {
     let lastCall = 0;
     return function(...args) {
         const now = Date.now();
         if (now - lastCall >= delay) {
             lastCall = now;
-            fn(...args);
+            callbackFunction(...args);
         }
     };
 }
