@@ -4,7 +4,7 @@ Analiza consultas SQL y detecta problemas, anti-patterns, y oportunidades de opt
 """
 
 import re
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 
 class SQLOptimization:
@@ -77,7 +77,7 @@ class SQLOptimizer:
         
         # Ordenar por severidad
         severity_order = {'error': 0, 'warning': 1, 'info': 2}
-        self.issues.sort(key=lambda x: severity_order.get(x.severity, 3))
+        self.issues.sort(key=lambda issue: severity_order.get(issue.severity, 3))
         
         score = self._calculate_efficiency_score()
         performance_estimate = self._estimate_performance(score)
@@ -100,9 +100,9 @@ class SQLOptimizer:
                 for issue in self.issues
             ],
             'total_issues': len(self.issues),
-            'critical_count': sum(1 for i in self.issues if i.severity == 'error'),
-            'warning_count': sum(1 for i in self.issues if i.severity == 'warning'),
-            'info_count': sum(1 for i in self.issues if i.severity == 'info'),
+            'critical_count': sum(1 for issue in self.issues if issue.severity == 'error'),
+            'warning_count': sum(1 for issue in self.issues if issue.severity == 'warning'),
+            'info_count': sum(1 for issue in self.issues if issue.severity == 'info'),
             'efficiency_score': score,
             'performance_estimate': performance_estimate,
             'complexity': complexity,

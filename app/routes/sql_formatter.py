@@ -27,6 +27,6 @@ def format_sql_api():
             'stats': analysis_data['stats']
         }), 200
         
-    except Exception as exc:
-        print(f"❌ [Error Interno] Motor SQL: {str(exc)}")
+    except Exception as processing_error:
+        print(f"❌ [Error Interno] Motor SQL: {str(processing_error)}")
         return jsonify({'error': 'Error interno al procesar la sintaxis SQL.'}), 500

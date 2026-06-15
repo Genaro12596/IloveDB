@@ -10,7 +10,6 @@
         </p>
     </div>
 
-    <!-- Main Grid -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
         <!-- Input Section -->
         <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;">
@@ -36,7 +35,6 @@
             </div>
         </div>
 
-        <!-- Results Section -->
         <div class="panel output-card">
             <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: 700;">Resultados</h2>
             <p style="margin: 0 0 0.5rem 0; color: var(--muted); font-size: 0.9rem;" id="analysis-summary">Aquí aparecerán los resultados</p>
@@ -84,14 +82,12 @@
         </div>
     </div>
 
-    <!-- History & Insights Section -->
     <div id="optimizer-history" style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
         <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Historial rápido</h3>
         <p style="margin: 0 0 1rem 0; color: var(--muted); font-size: 0.9rem;">Revisa los últimos análisis ejecutados en esta sesión.</p>
         <div id="history-list" style="display: grid; gap: 0.75rem;"></div>
     </div>
 
-    <!-- Examples Section -->
     <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
         <h3 style="margin: 0 0 1rem 0; font-weight: 700;">Ejemplos para probar:</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
@@ -167,13 +163,13 @@ function displayResults(data) {
         return;
     }
 
-    const html = data.issues.map((issue, idx) => {
+    const html = data.issues.map((issue, index) => {
         const severityColors = {
             'error': 'var(--error)',
             'warning': 'var(--warning)',
             'info': 'var(--info)'
         };
-        const uniqueId = `issue-${idx}`;
+        const uniqueId = `issue-${index}`;
 
         return `<div class="optimizer-issue-card" style="border-left: 4px solid ${severityColors[issue.severity]};">
                     <div class="optimizer-issue-header" onclick="toggleDetails('${uniqueId}')">
@@ -226,8 +222,8 @@ function generateAnalysisReport(data) {
     report += 'DETAILS:\n';
     report += '-'.repeat(50) + '\n';
     
-    data.issues.forEach((issue, idx) => {
-        report += `\n${idx + 1}. [${issue.severity.toUpperCase()}] ${issue.title}\n`;
+    data.issues.forEach((issue, index) => {
+        report += `\n${index + 1}. [${issue.severity.toUpperCase()}] ${issue.title}\n`;
         report += `   Description: ${issue.description}\n`;
         report += `   Suggestion: ${issue.suggestion}\n`;
         if (issue.impact) report += `   Impact: ${issue.impact}\n`;
@@ -256,13 +252,13 @@ function renderHistory() {
         historyList.innerHTML = '<div style="color: var(--muted); padding: 1rem;">No hay análisis previos en esta sesión.</div>';
         return;
     }
-    historyList.innerHTML = history.map((item, idx) => `
+    historyList.innerHTML = history.map((item, index) => `
         <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: grid; grid-template-columns: 1fr auto; gap: 0.5rem;">
             <div>
                 <div style="font-weight: 700;">${item.query.length > 80 ? item.query.slice(0, 80) + '...' : item.query}</div>
                 <div style="color: var(--muted); font-size: 0.85rem; margin-top: 0.35rem;">${item.summary} • ${item.timestamp}</div>
             </div>
-            <button onclick="loadHistoryQuery(${idx})" style="padding: 0.5rem 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 999px; cursor: pointer;">Usar</button>
+            <button onclick="loadHistoryQuery(${index})" style="padding: 0.5rem 0.75rem; background: var(--secondary); color: white; border: none; border-radius: 999px; cursor: pointer;">Usar</button>
         </div>
     `).join('');
 }
@@ -299,7 +295,6 @@ async function handleDownloadAnalysis() {
         return;
     }
     
-    // Hacer una llamada al API para obtener el último análisis
     try {
         const response = await fetch('/api/optimize-sql', {
             method: 'POST',
