@@ -66,40 +66,26 @@ Antes de la instalación, asegúrate de contar con los siguientes elementos inst
    
    La aplicación estará disponible en `http://localhost:5000`
 
-# Configuracion del entorno de desarrollo.
 
-El desarrollo del proyecto se realizó utilizando:
+# Ejemplos de ejecucion.
 
-- Visual Studio Code como editor principal.
-- Git y GitHub para el control de versiones.
-- Python 3.8 o superior
+En caso de que se requira saber informacion con respecto a las herramientas puede consultar el siguiente archivo en el cual se detallaran algunos ejemplos de como es que deberia de funcionar la aplicacion, adjuntando por supuesto imagenes de su ejecucion para una mejor comprension
 
+Ejecucion: [Aqui](assets/Orientador.md)
 
+# Arquitectura de los archivos
 
-## Dependencias de desarrollo
-Las dependencias principales se encuentran en `requirements.txt`. Para instalarlas, es necesario ejecutar el siguiente comando:
+Si se desea entender como funciona este proyecto entonces la siguiente informacion esta dirigida para los nuevos colaboradores o usuarios que quieran entender como es el funcionamiento del software
 
-```bash
-pip install -r requirements.txt
-```
+Arquitectura: [Aqui](docs/Arquitectura.md)
 
-## Ejecutar en modo desarrollo
-
-```bash
-python run.py
-```
-
-## Estructura de archivos importantes
+# Estructura de archivos importantes
 - `run.py`: Punto de entrada de la aplicación
 - `app/__init__.py`: Inicialización de la aplicación Flask
 - `app/routes/`: Rutas y controladores
 - `app/services/`: Lógica del programa
 - `app/templates/`: Plantillas HTML
 - `app/static/`: CSS y JavaScript
-
-# Ejemplos de ejecucion.
-
-
 
 # Estructura de directorios.
 
@@ -157,7 +143,8 @@ IloveDB/
 │   ├── LISTO_PARA_USAR.md             
 │   ├── VERIFICACION_FINAL.md          
 │   └── PHASE2_IMPROVEMENTS.md         
-│
+│   └── ...etc
+│   
 ├── scripts/                           # Scripts de utilidad
 │   ├── run.spec                       # Especificación PyInstaller
 │   ├── iLoveBD.spec                   # Especificación PyInstaller 
