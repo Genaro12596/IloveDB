@@ -6,31 +6,31 @@ A continuación, se documenta la participación colaborativa de todos los integr
 
 ## 1. Creacion de Issues
 El proyecto se organizo mediante la creacion estructurada de tareas utilizando *Issues* de GitHub.
-![Creacion de Issues](../assets/images/Creacion_de_issues).jpeg).
+![Creacion de Issues](../assets/images/Creacion_de_issues.png).
 ## 2. Gestión de Tareas (Issues)
 Se asignaron los *Issues* de GitHub a cada integrante, permitiendo registrar tareas, mejoras y dar seguimiento al progreso de cada uno.
 
 *Asignacion de Issues.*
-![Gestión de Issues](../assets/images/asignacion_issues.jpeg)
+![Gestión de Issues](../assets/images/asignacion_issues.png)
 ### 2.1 Issue #1 asignado a Alexis David Velazquez Garcia 
 *Documentacion de errores y bugs.*
-![Issue 1 asignado](../assets/images/issue_uno.jpeg)
+![Issue 1 asignado](../assets/images/issue_uno.png)
 
 ### 2.2 Issue #2 asignado a Adam Eliseo Lopez Presas
 *Revision de codigo y buenas practicas.*
-![Issue 2 asignado](../assets/images/issue_dos.jpeg)
+![Issue 2 asignado](../assets/images/issue_dos.png)
 
 ### 2.3 Issue #3 asignado a Anthony Gael Lopez Guerrero
 *Redacción del README.md oficial y manuales de instalación.*
-![Issue 3 asignado](../assets/images/issue_tres.jpeg)
+![Issue 3 asignado](../assets/images/issue_tres.png)
 
 ### 2.4 Issue #4 asignado a Moises Alejandro Valdez Avila 
 *Creación de diagramas de arquitectura y recursos visuales.*
-![Issue 4 asignado](../assets/images/issue_cuatro.jpeg)
+![Issue 4 asignado](../assets/images/issue_cuatro.png)
 
 ### 2.5 Issue #5 asignado a Genaro Perez Nuñez 
 *Recolección de evidencias de ejecución en Linux/WSL2.*
-![Issue 5 asignado](../assets/images/issue_cinco.jpeg)
+![Issue 5 asignado](../assets/images/issue_cinco.png)
 
 
 ## 3. Creación y Uso de Ramas
@@ -44,20 +44,20 @@ El proceso de integración se realizó mediante *Pull Requests*, asegurando que 
 
 ### Adam Eliseo Lopez Presas
 *(commit realizando buenas practicas de programación en ILoveBD)*
-![Evidencia commit Adam](../assets/images/commit_adam.jpeg)
+![Evidencia commit Adam](../assets/images/commit_adam.png)
 *(Pull request #6)*
-![Evidencia PR Adam](../assets/images/pr_adam.jpeg)
+![Evidencia PR Adam](../assets/images/pr_adam.png)
 
 ### Moises Alejandro Valdez Avila
 *(Commit Se Agregaron 2 Diagramas y se Adjuntaron Las imagenes a Assets)*
-![Evidencia commit Moises](../assets/images/commit_moi.jpeg)
+![Evidencia commit Moises](../assets/images/commit_moi.png)
 *(Pull request #7)*
-![Evidencia PR Moises](../assets/images/pr_moi.jpeg)
+![Evidencia PR Moises](../assets/images/pr_moi.png)
 
 
 ### Genaro Perez Nuñez
 *(Commit Evidencia de flujo de trabajo y uso de entornos Linux)*
-![Evidencia commit Genaro](../assets/images/commit_genaro.jpeg)
+![Evidencia commit Genaro](../assets/images/commit_genaro.png)
 
 
 ## 5. Entorno de Desarrollo y Ejecución (Linux/WSL2)
@@ -66,14 +66,14 @@ Para garantizar un ambiente estandarizado, el proyecto fue desarrollado íntegra
 A continuación se presentan las evidencias de las terminales de cada integrante, demostrando la ejecución local del proyecto en estos entornos:
 
 **Alexis David Velazquez Garcia**
-![Creación y levantamiento](../assets/images/entorno_alexis_1.jpeg)
+![Creación y levantamiento](../assets/images/entorno_alexis_1.png)
 ![Software en ejecución](../assets/images/entorno_alexis_2.png)
 
 **Anthony Gael Lopez Guerrero**
-![Evidencia Terminal Anthony](../assets/images/entorno_anthony.jpeg)
+![Evidencia Terminal Anthony](../assets/images/entorno_anthony.png)
 
 **Adam Eliseo Lopez Presas**
-![Evidencia Terminal Adam](../assets/images/entorno_adam.jpeg)
+![Evidencia Terminal Adam](../assets/images/entorno_adam.png)
 
 **Moises Alejandro Valdez Avila**
 ![Evidencia Software en ejecucion Moises](../assets/images/inicio.png)
