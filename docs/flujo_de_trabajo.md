@@ -1,30 +1,82 @@
-# Evidencia del Flujo de Trabajo (GitHub Flow) y Entorno de Desarrollo
+# Evidencia del Flujo de Trabajo y Entorno de Desarrollo
 
-Para el desarrollo del proyecto iLoveBD, el equipo adoptó el flujo de trabajo **GitHub Flow**. La elección de este flujo se justifica por su enfoque en despliegues rápidos y continuos, lo cual se adapta perfectamente a las necesidades de nuestra aplicación web basada en Flask. Al mantener una rama `main` siempre estable, pudimos integrar nuevas características mediante ramas independientes y *Pull Requests*, facilitando una integración frecuente y un flujo de trabajo sencillo.
+Para el desarrollo de **iLoveBD**, el equipo adoptó el flujo de trabajo **GitHub Flow**. Esta metodología nos permitió mantener una rama `RamaGenaro` estable en todo momento, desarrollando nuevas funcionalidades en ramas independientes y promoviendo la revisión constante del código a través de *Pull Requests* antes de cada integración.
 
-Adicionalmente, para garantizar un ambiente estandarizado y cumplir con los lineamientos de evaluación, el proyecto fue desarrollado íntegramente utilizando entornos basados en Linux (WSL2) por todos los miembros del equipo. Se emplearon entornos virtuales (`venv`) para aislar las dependencias.
+A continuación, se documenta la participación colaborativa de todos los integrantes y la ejecución del software en los entornos requeridos.
 
-A continuación, se presenta la evidencia gráfica que documenta tanto el flujo de trabajo colaborativo en la terminal como la ejecución exitosa del software en el entorno Linux.
+## 1. Creacion de Issues
+El proyecto se organizo mediante la creacion estructurada de tareas utilizando *Issues* de GitHub.
+![Creacion de Issues](../assets/images/Creacion_de_issues).jpeg).
+## 2. Gestión de Tareas (Issues)
+Se asignaron los *Issues* de GitHub a cada integrante, permitiendo registrar tareas, mejoras y dar seguimiento al progreso de cada uno.
 
-## Evidencias de Ejecución y Flujo de Trabajo por Integrante
+*Asignacion de Issues.*
+![Gestión de Issues](../assets/images/asignacion_issues.jpeg)
+### 2.1 Issue #1 asignado a Alexis David Velazquez Garcia 
+*Documentacion de errores y bugs.*
+![Issue 1 asignado](../assets/images/issue_uno.jpeg)
 
-### 1. Alexis
-*Demostración de la creación del entorno virtual, instalación de requerimientos en WSL2 y levantamiento del servidor Flask, integrando los cambios al flujo de trabajo.*
-![Creación y levantamiento de software](../assets/images/entorno_alexis_1.png)
+### 2.2 Issue #2 asignado a Adam Eliseo Lopez Presas
+*Revision de codigo y buenas practicas.*
+![Issue 2 asignado](../assets/images/issue_dos.jpeg)
+
+### 2.3 Issue #3 asignado a Anthony Gael Lopez Guerrero
+*Redacción del README.md oficial y manuales de instalación.*
+![Issue 3 asignado](../assets/images/issue_tres.jpeg)
+
+### 2.4 Issue #4 asignado a Moises Alejandro Valdez Avila 
+*Creación de diagramas de arquitectura y recursos visuales.*
+![Issue 4 asignado](../assets/images/issue_cuatro.jpeg)
+
+### 2.5 Issue #5 asignado a Genaro Perez Nuñez 
+*Recolección de evidencias de ejecución en Linux/WSL2.*
+![Issue 5 asignado](../assets/images/issue_cinco.jpeg)
+
+
+## 3. Creación y Uso de Ramas
+Para evitar conflictos directos en producción y mantener un desarrollo aislado, los miembros del equipo que interactuan directamente con codigo trabajaron  en sus propias ramas derivadas de `RamaGenaro`.
+
+*Lista de ramas activas en el repositorio.*
+![Uso de Ramas](../assets/images/Lista_ramas.png)
+
+## 4. Trabajo Colaborativo: Commits y Pull Requests
+El proceso de integración se realizó mediante *Pull Requests*, asegurando que los cambios fueran revisados y aprobados antes de fusionarlos a la rama principal. Se mantuvo un historial de *commits* frecuentes y descriptivos.
+
+### Adam Eliseo Lopez Presas
+*(commit realizando buenas practicas de programación en ILoveBD)*
+![Evidencia commit Adam](../assets/images/commit_adam.jpeg)
+*(Pull request #6)*
+![Evidencia PR Adam](../assets/images/pr_adam.jpeg)
+
+### Moises Alejandro Valdez Avila
+*(Commit Se Agregaron 2 Diagramas y se Adjuntaron Las imagenes a Assets)*
+![Evidencia commit Moises](../assets/images/commit_moi.jpeg)
+*(Pull request #7)*
+![Evidencia PR Moises](../assets/images/pr_moi.jpeg)
+
+
+### Genaro Perez Nuñez
+*(Commit Evidencia de flujo de trabajo y uso de entornos Linux)*
+![Evidencia commit Genaro](../assets/images/commit_genaro.jpeg)
+
+
+## 5. Entorno de Desarrollo y Ejecución (Linux/WSL2)
+Para garantizar un ambiente estandarizado, el proyecto fue desarrollado íntegramente utilizando entornos basados en Linux (WSL2 y distribuciones nativas). Se emplearon entornos virtuales (`venv`) para aislar las dependencias requeridas por Flask.
+
+A continuación se presentan las evidencias de las terminales de cada integrante, demostrando la ejecución local del proyecto en estos entornos:
+
+**Alexis David Velazquez Garcia**
+![Creación y levantamiento](../assets/images/entorno_alexis_1.jpeg)
 ![Software en ejecución](../assets/images/entorno_alexis_2.png)
 
-### 2. Anthony
-*(Breve descripción de la aportación de Anthony al flujo de trabajo desde su terminal Linux)*
-![Evidencia Anthony](../assets/images/entorno_anthony.png)
+**Anthony Gael Lopez Guerrero**
+![Evidencia Terminal Anthony](../assets/images/entorno_anthony.jpeg)
 
-### 3. Genaro
-*(Breve descripción de tu aportación al flujo de trabajo, ej: Resolución de issue #5 y ejecución del entorno local)*
-![Evidencia Genaro](../assets/images/entorno_genaro.png)
+**Adam Eliseo Lopez Presas**
+![Evidencia Terminal Adam](../assets/images/entorno_adam.jpeg)
 
-### 4. Adam
-*(Breve descripción de su captura)*
-![Evidencia Adam](../assets/images/entorno_adam.png)
+**Moises Alejandro Valdez Avila**
+![Evidencia Software en ejecucion Moises](../assets/images/inicio.png)
 
-### 5. Moises
-*(Breve descripción de su captura)*
-![Evidencia Moises](../assets/images/entorno_moises.png)
+**Genaro Perez Nuñez**
+![Evidencia Terminal Genaro](../assets/images/entorno_genaro.png)
