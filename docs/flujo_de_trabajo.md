@@ -6,7 +6,7 @@ A continuación, se documenta la participación colaborativa de todos los integr
 
 ## 1. Creacion de Issues
 El proyecto se organizo mediante la creacion estructurada de tareas utilizando *Issues* de GitHub.
-![Creacion de Issues](../assets/images/Creacion_de_issues.png).
+![Creacion de Issues](../assets/images/Creacion_de_issues.jpeg).
 ## 2. Gestión de Tareas (Issues)
 Se asignaron los *Issues* de GitHub a cada integrante, permitiendo registrar tareas, mejoras y dar seguimiento al progreso de cada uno.
 
@@ -66,8 +66,8 @@ Para garantizar un ambiente estandarizado, el proyecto fue desarrollado íntegra
 A continuación se presentan las evidencias de las terminales de cada integrante, demostrando la ejecución local del proyecto en estos entornos:
 
 **Alexis David Velazquez Garcia**
-![Creación y levantamiento](../assets/images/entorno_alexis_1.png)
-![Software en ejecución](../assets/images/entorno_alexis_2.png)
+![Creación y levantamiento](../assets/images/entorno_alexis_1.jpeg)
+![Software en ejecución](../assets/images/entorno_alexis_2.jpeg)
 
 **Anthony Gael Lopez Guerrero**
 ![Evidencia Terminal Anthony](../assets/images/entorno_anthony.png)
@@ -76,7 +76,8 @@ A continuación se presentan las evidencias de las terminales de cada integrante
 ![Evidencia Terminal Adam](../assets/images/entorno_adam.png)
 
 **Moises Alejandro Valdez Avila**
-![Evidencia Software en ejecucion Moises](../assets/images/inicio.png)
+![Evidencia Software en ejecucion Moises](../assets/images/Inicio.png)
 
 **Genaro Perez Nuñez**
-![Evidencia Terminal Genaro](../assets/images/entorno_genaro.png)
+![Evidencia Terminal Genaro](../assets/images/entorno_genaro_1.png)
+![Software en Ejecucion](../assets/images/entorno_genaro.png)
