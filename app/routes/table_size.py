@@ -15,8 +15,9 @@ def table_size_api():
 
     try:
         row_count = int(rows)
-        if row_count < 1: raise ValueError
-    except Exception:
+        if row_count < 1:
+            raise ValueError
+    except ValueError:
         return jsonify({'error': 'La cantidad de filas debe ser un número mayor a 0.'}), 400
 
     if not create_table_sql:
@@ -26,8 +27,8 @@ def table_size_api():
         result = calculate_table_size(row_count, create_table_sql)
         return jsonify({'result': result}), 200
         
-    except ValueError as ve:
-        return jsonify({'error': str(ve)}), 400
-    except Exception as exc:
-        print(f"❌ [Error Backend] DB Sizer: {str(exc)}")
+    except ValueError as validation_error:
+        return jsonify({'error': str(validation_error)}), 400
+    except Exception as processing_error:
+        print(f"❌ [Error Backend] DB Sizer: {str(processing_error)}")
         return jsonify({'error': 'Error interno al procesar la sintaxis de la tabla.'}), 500

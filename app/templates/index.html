@@ -3,22 +3,18 @@
 
 {% block content %}
 <style>
-    /* Eliminamos .app-shell para que tu styles.css controle el fondo global */
-
-    /* Animación de entrada fluida */
+   
     @keyframes fadeUp {
         0% { opacity: 0; transform: translateY(40px); }
         100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* Animación de la ventana de código */
     @keyframes float {
         0% { transform: translateY(0px); }
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
     }
 
-    /* Layout de 2 Columnas */
     .hero-container {
         display: flex;
         align-items: center;
@@ -45,7 +41,7 @@
 
     .hero-text p {
         font-size: 1.25rem;
-        color: var(--muted); /* Adaptable */
+        color: var(--muted);
         max-width: 600px;
         line-height: 1.6;
     }
@@ -57,10 +53,9 @@
         animation: float 6s ease-in-out infinite;
     }
 
-    /* Ventana Mockup Adaptable */
     .mockup-window {
-        background: var(--surface); /* Adaptable */
-        border: 1px solid var(--border); /* Adaptable */
+        background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 16px;
         width: 100%;
         max-width: 500px;
@@ -69,7 +64,7 @@
     }
 
     .mockup-header {
-        background: rgba(128, 128, 128, 0.1); /* Gris translúcido funciona en ambos modos */
+        background: rgba(128, 128, 128, 0.1);
         padding: 0.8rem 1rem;
         display: flex;
         gap: 0.5rem;
@@ -82,11 +77,10 @@
         padding: 1.5rem;
         font-family: 'Courier New', monospace;
         font-size: 0.9rem;
-        color: var(--text); /* Adaptable */
+        color: var(--text);
         line-height: 1.6;
     }
 
-    /* Grid y Tarjetas Adaptables */
     .tool-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -97,12 +91,12 @@
     }
 
     .tool-card {
-        background: var(--surface); /* Adaptable */
-        border: 1px solid var(--border); /* Adaptable */
+        background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 24px;
         padding: 2rem;
         text-decoration: none;
-        color: var(--text); /* Adaptable */
+        color: var(--text);
         display: flex;
         flex-direction: column;
         transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -141,21 +135,20 @@
         margin: 0 0 0.8rem 0;
         font-size: 1.3rem;
         font-weight: 700;
-        color: var(--text); /* Adaptable */
+        color: var(--text);
     }
 
     .tool-card p {
         margin: 0;
         font-size: 0.95rem;
-        color: var(--muted); /* Adaptable */
+        color: var(--muted);
         line-height: 1.5;
     }
 
-    /* Caja de Ejemplo Adaptable */
     .example-box {
         margin-top: 1.5rem;
         padding: 1rem;
-        background: rgba(128, 128, 128, 0.06); /* Gris suave para ambos modos */
+        background: rgba(128, 128, 128, 0.06);
         border-radius: 12px;
         border-left: 3px solid rgba(128, 128, 128, 0.3);
         display: flex;
@@ -176,7 +169,7 @@
     .example-text {
         font-family: 'Courier New', monospace;
         font-size: 0.85rem !important;
-        color: #8b5cf6 !important; /* Púrpura que contrasta en blanco y negro */
+        color: #8b5cf6 !important;
     }
 
     .card-arrow {

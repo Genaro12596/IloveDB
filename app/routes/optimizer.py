@@ -30,8 +30,8 @@ def api_optimize_sql():
         result = optimize_sql(sql)
         return jsonify(result), 200
         
-    except Exception as e:
+    except Exception as processing_error:
         return jsonify({
             'success': False,
-            'error': f'Error al procesar: {str(e)}'
+            'error': f'Error al procesar: {str(processing_error)}'
         }), 500

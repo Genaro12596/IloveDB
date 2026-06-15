@@ -1,0 +1,11 @@
+### GeneradorSQL 
+Descripción:
+Módulo que permite generar consultas SQL dinámicamente mediante estructuras configurables y automatización de sentencias
+
+<p align="center">
+  <img src="../assets/images/GeneradorSQL.png" width="355" height="365" alt="Descripción">
+</p>
+
+<p align="center">
+  <img src="../assets/images/GeneradorSQL2.png" width="455" height="215" alt="Descripción">
+</p>

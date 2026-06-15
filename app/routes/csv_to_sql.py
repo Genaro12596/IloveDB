@@ -17,7 +17,8 @@ def csv_to_sql_api():
         return jsonify({'error': 'Faltan parámetros: Se requiere el nombre de la tabla y los datos CSV.'}), 400
 
     try:
-        # Delegamos la responsabilidad al servicio
+        # La lógica de conversión se mantiene en el servicio para separar
+        # responsabilidades y facilitar las pruebas del controlador.
         result = process_csv_to_sql(table_name, csv_data)
         
         return jsonify({
@@ -26,8 +27,8 @@ def csv_to_sql_api():
             'schema': result['schema']
         }), 200
         
-    except ValueError as ve:
-        return jsonify({'error': str(ve)}), 400
-    except Exception as exc:
-        print(f"❌ [Error Backend] CSV to SQL: {str(exc)}")
+    except ValueError as value_error:
+        return jsonify({'error': str(value_error)}), 400
+    except Exception as processing_error:
+        print(f"❌ [Error Backend] CSV to SQL: {str(processing_error)}")
         return jsonify({'error': 'Error interno al procesar el archivo CSV.'}), 500

@@ -798,10 +798,10 @@ def generate_crud_api():
             },
             'files': files,
         }), 200
-    except ValueError as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
-    except Exception as exc:
-        return jsonify({'success': False, 'error': f'Error interno: {str(exc)}'}), 500
+    except ValueError as validation_error:
+        return jsonify({'success': False, 'error': str(validation_error)}), 400
+    except Exception as processing_error:
+        return jsonify({'success': False, 'error': f'Error interno: {str(processing_error)}'}), 500
 
 
 @generator_bp.route('/api/download-crud-zip', methods=['POST'])
@@ -836,10 +836,10 @@ def download_crud_zip_api():
             as_attachment=True,
             download_name='crud_generator_package.zip'
         )
-    except ValueError as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
-    except Exception as exc:
-        return jsonify({'success': False, 'error': f'Error interno: {str(exc)}'}), 500
+    except ValueError as validation_error:
+        return jsonify({'success': False, 'error': str(validation_error)}), 400
+    except Exception as processing_error:
+        return jsonify({'success': False, 'error': f'Error interno: {str(processing_error)}'}), 500
 
 
 def generate_sql(data):
@@ -957,7 +957,7 @@ def generate_sql_api():
     try:
         result = generate_sql(data)
         return jsonify(result), 200
-    except ValueError as error:
-        return jsonify({'success': False, 'error': str(error)}), 400
-    except Exception as exc:
-        return jsonify({'success': False, 'error': f'Error interno: {str(exc)}'}), 500
+    except ValueError as validation_error:
+        return jsonify({'success': False, 'error': str(validation_error)}), 400
+    except Exception as processing_error:
+        return jsonify({'success': False, 'error': f'Error interno: {str(processing_error)}'}), 500

@@ -241,10 +241,10 @@ def normalization_api():
         recommendations.append('Aplica índices a columnas de búsqueda frecuente y a claves foráneas.')
 
         dependencies = []
-        for prefix, cols in prefix_groups.items():
+        for prefix, related_columns in prefix_groups.items():
             dependencies.append({
                 'entity': prefix,
-                'columns': cols,
+                'columns': related_columns,
                 'recommendation': f'Considere una tabla {prefix}s con clave primaria {prefix}_id.'
             })
 
@@ -270,5 +270,5 @@ def normalization_api():
             }
         }), 200
 
-    except Exception as exc:
-        return jsonify({'error': f'Error interno procesando SQL: {str(exc)}'}), 500
+    except Exception as processing_error:
+        return jsonify({'error': f'Error interno procesando SQL: {str(processing_error)}'}), 500
