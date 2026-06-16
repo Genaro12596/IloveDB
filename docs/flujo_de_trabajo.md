@@ -70,7 +70,7 @@ El proceso de integración se realizó mediante *Pull Requests*, asegurando que 
 *(Commit realizados)*
 ![Evidencia commit Genaro](../assets/images/commit_genaro.png)
 *(Pull request )*
-![Evidencia PR Anthony](../assets/images/pr_genaro.png)
+![Evidencia PR Genaro](../assets/images/pr_genaro.png)
 
 
 ## 5. Entorno de Desarrollo y Ejecución (Linux/WSL2)
