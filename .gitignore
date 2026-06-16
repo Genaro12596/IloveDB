@@ -1,0 +1,27 @@
+# Entornos Virtuales
+venv/
+env/
+ENV/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de compilación y empaquetado (PyInstaller)
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# Variables de entorno y secretos
+.env
+.flaskenv
+
+# Bases de datos locales (si llegaran a usar SQLite en el futuro)
+*.sqlite3
+*.db
