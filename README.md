@@ -108,6 +108,71 @@ Arquitectura: [Aqui](docs/Arquitectura.md)
 
 # Estructura de directorios.
 
+iLoveDB/
+├── .vscode/
+│   └── settings.json                  # Config VS Code
+├── app/
+│   ├── routes/                        # Controladores (Rutas)
+│   │   ├── csv_to_sql.py              # Ruta CSV a SQL
+│   │   ├── home.py                    # Ruta Inicio
+│   │   ├── normalization.py           # Ruta Normalización
+│   │   ├── optimizer.py               # Ruta Optimizador
+│   │   ├── sql_formatter.py           # Ruta Formateador
+│   │   ├── sql_generator.py           # Ruta Generador
+│   │   └── table_size.py              # Ruta Calcular Tamaño
+│   ├── services/                      
+│   │   ├── csv_sql_service.py         # Lógica CSV a SQL
+│   │   ├── optimizer_service.py       # Lógica Optimizador
+│   │   ├── sql_formatter_service.py   # Lógica Formateador
+│   │   └── table_size_service.py      # Lógica Calculadora
+│   ├── static/                        # Frontend estático
+│   │   ├── css/
+│   │   │   └── styles.css             # Estilos
+│   │   └── js/
+│   │       ├── app.js                 # Scripts JS
+│   │       └── utils.js               # Utilidades JS
+│   ├── templates/                     # HTML
+│   │   ├── base.html                  # Plantilla base
+│   │   ├── csv_sql.html               # Vista CSV a SQL
+│   │   ├── formatter.html             # Vista Formateador
+│   │   ├── generator.html             # Vista Generador
+│   │   ├── index.html                 # Vista Inicio
+│   │   ├── normalization.html         # Vista Normalización
+│   │   ├── optimizer.html             # Vista Optimizador
+│   │   └── table_size.html            # Vista Calculadora
+│   └── __init__.py                    # Inicializador Flask
+├── assets/                            # Recursos extra
+│   ├── Diagrama/
+│   │   └── [...]                      # Diagramas
+│   ├── images/
+│   │   └── [...]                      # Capturas de pantalla
+│   └── Orientador.md                  # Guía de orientación
+├── docs/                              # Documentación Markdown
+│   ├── Images/
+│   │   └── [...]                      # Imágenes para Docs
+│   ├── AnalizadorSQL.md               # Doc Analizador
+│   ├── Arquitectura.md                # Doc Arquitectura
+│   ├── CSVSQL.md                      # Doc CSV a SQL
+│   ├── DBStorage.md                   # Doc Almacenamiento
+│   ├── Documentación Clean Code.md    # Estándares de código
+│   ├── Ejecucion de programa.md       # Guía de ejecución
+│   ├── EngineOptimizer.md             # Doc Optimizador
+│   ├── GeneradorSQL                   # Archivo Generador
+│   ├── Normalizacion.md               # Doc Normalización
+│   ├── SolucionLinux.md               # Guía para Linux
+│   └── flujo_de_trabajo.md            # Guía Git/GitHub
+├── scripts/                           # Automatización
+│   ├── INICIAR.bat                    # Instalador Windows
+│   ├── START.bat                      # Lanzador Windows
+│   ├── diagnostico.py                 # Script de prueba
+│   ├── start_server.py                # Lanzador Python
+│   ├── verificar.py                   # Validador de entorno
+│   └── verify_ui_changes.py           # Validador de interfaz
+├── .gitignore                         # Exclusiones Git
+├── README.md                          # Portada del proyecto
+├── requirements.txt                   # Dependencias Python
+└── run.py                             # Ejecutable principal
+
 # Licencia y autores.
 
 ## Autores
