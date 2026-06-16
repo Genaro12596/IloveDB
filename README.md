@@ -1,4 +1,4 @@
-# IloveDB
+# IloveBD
 
 # Descripcion del proyecto.
 ILoveBD es una plataforma orientada a la automatización, análisis y optimización de tareas relacionadas con bases de datos y consultas SQL. El sistema fue desarrollado con el propósito de centralizar herramientas útiles para desarrolladores, analistas de datos y administradores de bases de datos, permitiendo reducir procesos manuales y mejorar la productividad en actividades técnicas relacionadas con SQL. 
@@ -16,7 +16,7 @@ El sistema cuenta actualmente con **6 herramientas completamente funcionales**:
 # Requisitos de hardware y software.
 
 ## Hardware
-- **Procesador**: Intel Core i3 o equivalente (intel celeron)
+- **Procesador**: Intel Core i3 o equivalente (Intel Celeron)
 - **Memoria RAM**: 2 GB mínimo
 - **Almacenamiento**: 500 MB de espacio disponible
 - **Conexión a Internet**: Recomendado para descargas de dependencias
@@ -24,47 +24,66 @@ El sistema cuenta actualmente con **6 herramientas completamente funcionales**:
 ## Software
 Antes de la instalación, asegúrate de contar con los siguientes elementos instalados en tu entorno de ejecución:
 
-* **Python:** Versión 3.x o superior.
-* **Administrador de paquetes:** pip (incluido por defecto con Python).
+* **Python:** Versión 3.10 o superior.
+* **Administrador de paquetes:** pip (incluido con Python) o `py` en Windows.
 * **Dependencias Core:** Especificadas en el manifiesto del proyecto:
-  * `Flask` (v3.0.3) - Framework de desarrollo backend.
-  * `sqlparse` (v0.5.0) - Motor de análisis sintáctico de SQL.
-  * `python-dotenv` (v1.0.1) - Gestión de variables de entorno.
+  * `Flask` - Framework de desarrollo backend.
+  * `sqlparse` - Motor de análisis sintáctico de SQL.
+  * `python-dotenv` - Gestión de variables de entorno.
 
-# Procedimiento de instalacion.
+## Estado de la instalación actual
+La sección de instalación actual ofrece los pasos básicos para clonar el repositorio, crear un entorno virtual y ejecutar el proyecto. Esta versión actualizada agrega instrucciones claras para nuevos colaboradores en Windows y en macOS/Linux, usando el intérprete Python adecuado de cada plataforma.
 
-1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/Genaro12596/IloveDB.git
-   cd IloveDB
-   ```
+# Procedimiento de instalación
 
-2. **Crear un entorno virtual**
-   ```bash
-   python -m venv venv
-   ```
+## 1. Clonar el repositorio
+```bash
+git clone https://github.com/Genaro12596/IloveDB.git
+cd IloveDB
+```
 
-3. **Activar el entorno virtual**
-   - En Windows:
-     ```bash
-     venv\Scripts\activate
-     ```
-   - En macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
+## 2. Crear y activar el entorno virtual
 
-4. **Instalar las dependencias**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### En Windows
+```powershell
+py -3 -m venv venv
+venv\Scripts\activate
+python -m pip install --upgrade pip
+```
 
-5. **Verificar la instalación**
-   ```bash
-   python run.py
-   ```
-   
-   La aplicación estará disponible en `http://localhost:5000`
+### En macOS/Linux
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install --upgrade pip
+```
+
+> Nota: Si tu sistema usa `python` en lugar de `python3`, puedes reemplazar `python3` por `python` en los comandos anteriores.
+
+En caso de tener el error 
+```bash
+venv/bin/activate (línea 40): 'case' builtin usado fuera de un bloque 'switch'
+```
+Solucion: [Click Aqui](docs/SolucionLinux.md)
+
+## 3. Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
+
+Si el entorno está gestionado por el sistema y no permite instalación directa, usa el entorno virtual creado.
+
+## 4. Ejecutar la aplicación
+```bash
+python run.py
+```
+
+La aplicación estará disponible en `http://localhost:5000`.
+
+## 5. Verificación rápida
+- Accede a `http://localhost:5000` en tu navegador.
+- Si aparece la página de inicio, la instalación fue exitosa.
+- Si no, revisa que el entorno virtual esté activado y que las dependencias hayan sido instaladas correctamente.
 
 
 # Ejemplos de ejecucion.
