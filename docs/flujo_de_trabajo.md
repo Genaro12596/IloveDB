@@ -45,39 +45,61 @@ El proceso de integración se realizó mediante *Pull Requests*, asegurando que 
 ### Adam Eliseo Lopez Presas
 *(commit realizando buenas practicas de programación en ILoveBD)*
 ![Evidencia commit Adam](../assets/images/commit_adam.png)
-*(Pull request #6)*
+*(Pull request )*
 ![Evidencia PR Adam](../assets/images/pr_adam.png)
 
 ### Moises Alejandro Valdez Avila
 *(Commit Se Agregaron 2 Diagramas y se Adjuntaron Las imagenes a Assets)*
 ![Evidencia commit Moises](../assets/images/commit_moi.png)
-*(Pull request #7)*
+*(Pull request )*
 ![Evidencia PR Moises](../assets/images/pr_moi.png)
 
+### Anthony Gael Lopez Guerrero
+*(commits realizados)*
+![Evidencia commit Anthony](../assets/images/commit_antony.jpeg)
+*(Pull request )*
+![Evidencia PR Anthony](../assets/images/pr_antony.png)
+
+### Alexis David Velazquez Garcia 
+*(commits realizados)*
+![Evidencia commit Anthony](../assets/images/commit_alexis.png)
+*(Pull request )*
+![Evidencia PR Anthony](../assets/images/pr_alexis.png)
 
 ### Genaro Perez Nuñez
-*(Commit Evidencia de flujo de trabajo y uso de entornos Linux)*
+*(Commit realizados)*
 ![Evidencia commit Genaro](../assets/images/commit_genaro.png)
+*(Pull request )*
+![Evidencia PR Anthony](../assets/images/pr_genaro.png)
 
 
 ## 5. Entorno de Desarrollo y Ejecución (Linux/WSL2)
 Para garantizar un ambiente estandarizado, el proyecto fue desarrollado íntegramente utilizando entornos basados en Linux (WSL2 y distribuciones nativas). Se emplearon entornos virtuales (`venv`) para aislar las dependencias requeridas por Flask.
+**Alexis David Velazquez Garcia**
+![Creación y levantamiento](../assets/images/entorno_alexis_1.jpeg)
+
+**Genaro Perez Nuñez**
+![Creacion y levantamiento](../assets/images/entorno_genaro_1.png)
+
+**Adam Eliseo Lopez Presas**
+![Creacion y levantamiento](../assets/images/entorno_adam.jpeg)
+
+**Anthony Gael Lopez Guerrero**
+![Creacion y levantamiento](../assets/images/entorno_anthony.jpeg)
 
 A continuación se presentan las evidencias de las terminales de cada integrante, demostrando la ejecución local del proyecto en estos entornos:
 
 **Alexis David Velazquez Garcia**
-![Creación y levantamiento](../assets/images/entorno_alexis_1.jpeg)
 ![Software en ejecución](../assets/images/entorno_alexis_2.jpeg)
 
 **Anthony Gael Lopez Guerrero**
-![Evidencia Terminal Anthony](../assets/images/entorno_anthony.png)
+![Evidencia Terminal Anthony](../assets/images/entorno_anthony1.jpeg)
 
 **Adam Eliseo Lopez Presas**
-![Evidencia Terminal Adam](../assets/images/entorno_adam.png)
+![Evidencia Terminal Adam](../assets/images/entorno_adam1.jpeg)
 
 **Moises Alejandro Valdez Avila**
-![Evidencia Software en ejecucion Moises](../assets/images/Inicio.png)
+![Evidencia Software en ejecucion Moises](../assets/images/entorno_moi.jpeg)
 
 **Genaro Perez Nuñez**
-![Evidencia Terminal Genaro](../assets/images/entorno_genaro_1.png)
 ![Software en Ejecucion](../assets/images/entorno_genaro.png)
