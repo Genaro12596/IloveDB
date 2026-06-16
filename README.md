@@ -16,7 +16,7 @@ El sistema cuenta actualmente con **6 herramientas completamente funcionales**:
 # Requisitos de hardware y software.
 
 ## Hardware
-- **Procesador**: Intel Core i3 o equivalente (Intel Celeron)
+- **Procesador**: Intel Core i3 o equivalente
 - **Memoria RAM**: 2 GB mínimo
 - **Almacenamiento**: 500 MB de espacio disponible
 - **Conexión a Internet**: Recomendado para descargas de dependencias
