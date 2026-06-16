@@ -1,6 +1,6 @@
 # Evidencia del Flujo de Trabajo y Entorno de Desarrollo
 
-Para el desarrollo de **iLoveBD**, el equipo adoptó el flujo de trabajo **GitHub Flow**. Esta metodología nos permitió mantener una rama `RamaGenaro` estable en todo momento, desarrollando nuevas funcionalidades en ramas independientes y promoviendo la revisión constante del código a través de *Pull Requests* antes de cada integración.
+Para el desarrollo de **iLoveBD**, el equipo adoptó el flujo de trabajo **GitHub Flow**. Esta metodología nos permitió mantener una rama `Main` estable en todo momento, desarrollando nuevas funcionalidades en ramas independientes y promoviendo la revisión constante del código a través de *Pull Requests* antes de cada integración.
 
 A continuación, se documenta la participación colaborativa de todos los integrantes y la ejecución del software en los entornos requeridos.
 
@@ -34,7 +34,7 @@ Se asignaron los *Issues* de GitHub a cada integrante, permitiendo registrar tar
 
 
 ## 3. Creación y Uso de Ramas
-Para evitar conflictos directos en producción y mantener un desarrollo aislado, los miembros del equipo que interactuan directamente con codigo trabajaron  en sus propias ramas derivadas de `RamaGenaro`.
+Para evitar conflictos directos en producción y mantener un desarrollo aislado, los miembros del equipo trabajaron  en sus propias ramas derivadas de `main`.
 
 *Lista de ramas activas en el repositorio.*
 ![Uso de Ramas](../assets/images/Lista_ramas.png)
@@ -75,6 +75,7 @@ El proceso de integración se realizó mediante *Pull Requests*, asegurando que 
 
 ## 5. Entorno de Desarrollo y Ejecución (Linux/WSL2)
 Para garantizar un ambiente estandarizado, el proyecto fue desarrollado íntegramente utilizando entornos basados en Linux (WSL2 y distribuciones nativas). Se emplearon entornos virtuales (`venv`) para aislar las dependencias requeridas por Flask.
+#### Creacion y levantamiento
 **Alexis David Velazquez Garcia**
 ![Creación y levantamiento](../assets/images/entorno_alexis_1.jpeg)
 
@@ -85,15 +86,16 @@ Para garantizar un ambiente estandarizado, el proyecto fue desarrollado íntegra
 ![Creacion y levantamiento](../assets/images/entorno_adam.jpeg)
 
 **Anthony Gael Lopez Guerrero**
-![Creacion y levantamiento](../assets/images/entorno_anthony.jpeg)
+![Creacion y levantamiento](../assets/images/entorno_antony.jpeg)
 
+#### Ejecucion del proyecto
 A continuación se presentan las evidencias de las terminales de cada integrante, demostrando la ejecución local del proyecto en estos entornos:
 
 **Alexis David Velazquez Garcia**
 ![Software en ejecución](../assets/images/entorno_alexis_2.jpeg)
 
 **Anthony Gael Lopez Guerrero**
-![Evidencia Terminal Anthony](../assets/images/entorno_anthony1.jpeg)
+![Evidencia Terminal Anthony](../assets/images/entorno_antony1.jpeg)
 
 **Adam Eliseo Lopez Presas**
 ![Evidencia Terminal Adam](../assets/images/entorno_adam1.jpeg)
