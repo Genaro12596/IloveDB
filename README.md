@@ -108,6 +108,7 @@ Arquitectura: [Aqui](docs/Arquitectura.md)
 
 # Estructura de directorios.
 
+```text
 iLoveDB/
 ├── .vscode/
 │   └── settings.json                  # Config VS Code
@@ -172,6 +173,7 @@ iLoveDB/
 ├── README.md                          # Portada del proyecto
 ├── requirements.txt                   # Dependencias Python
 └── run.py                             # Ejecutable principal
+```
 
 # Licencia y autores.
 
