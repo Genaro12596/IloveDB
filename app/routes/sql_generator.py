@@ -31,6 +31,40 @@ def _clean_sql(sql_text: str) -> str:
     return sql_text.strip()
 
 
+def _is_valid_identifier(name: str) -> bool:
+    if not isinstance(name, str) or not name:
+        return False
+    # Allow letters, numbers and underscore, limit length to avoid abuse
+    return bool(re.match(r'^[A-Za-z_][A-Za-z0-9_]{0,63}$', name))
+
+
+def _sanitize_identifier(name: str) -> str:
+    name = (name or '').strip()
+    if _is_valid_identifier(name):
+        return name
+    # Fallback: replace invalid chars with underscore and truncate
+    sanitized = re.sub(r'[^A-Za-z0-9_]', '_', name)[:63]
+    if not sanitized:
+        raise ValueError('Identificador inválido en el SQL')
+    return sanitized
+
+
+def _sanitize_default(value: str) -> str:
+    if value is None:
+        return None
+    val = str(value).strip()
+    # If it's a numeric literal, return as is
+    if re.match(r'^-?\d+(?:\.\d+)?$', val):
+        return val
+    # If it's a quoted string, normalize quotes
+    if (val.startswith("'") and val.endswith("'") ) or (val.startswith('"') and val.endswith('"')):
+        inner = val[1:-1].replace("'", "\\'")
+        return f"'{inner}'"
+    # Otherwise, treat as string literal
+    escaped = val.replace("'", "\\'")
+    return f"'{escaped}'"
+
+
 def _split_column_definitions(columns_text: str) -> List[str]:
     parts: List[str] = []
     buffer: List[str] = []
@@ -111,14 +145,14 @@ def _parse_column_definition(line: str) -> Dict[str, Any]:
     unique = bool(re.search(r'UNIQUE', raw_constraints, flags=re.IGNORECASE))
     auto_increment = bool(re.search(r'AUTO_INCREMENT|AUTOINCREMENT', raw_constraints, flags=re.IGNORECASE))
     default_match = re.search(r'DEFAULT\s+([^\s,]+)', raw_constraints, flags=re.IGNORECASE)
-    default = default_match.group(1) if default_match else None
+    default = _sanitize_default(default_match.group(1)) if default_match else None
 
     reference_match = re.search(r'REFERENCES\s+([\w`".]+)\s*\(([^)]+)\)', raw_constraints, flags=re.IGNORECASE)
     foreign_key = None
     if reference_match:
         foreign_key = {
-            'table': reference_match.group(1).strip(' `"[]'),
-            'column': reference_match.group(2).strip(' `"[]')
+            'table': _sanitize_identifier(reference_match.group(1).strip(' `"[]')),
+            'column': _sanitize_identifier(reference_match.group(2).strip(' `"[]'))
         }
 
     return {
@@ -141,6 +175,8 @@ def _parse_create_table(sql_text: str) -> Dict[str, Any]:
         raise ValueError('CREATE TABLE no válido')
 
     table_name = match.group(1)
+    if not _is_valid_identifier(table_name):
+        raise ValueError('Nombre de tabla no válido')
     columns_text = match.group(2)
     column_lines = _split_column_definitions(columns_text)
     if not column_lines:
@@ -255,12 +291,13 @@ def _build_java_setter_name(column_name: str) -> str:
 
 def _generate_sql_crud(schema: Dict[str, Any]) -> List[Dict[str, str]]:
     table = schema['table_name']
+    table = _sanitize_identifier(table)
     columns = schema['columns']
     if not columns:
         raise ValueError('No se encontraron columnas válidas')
 
     pk = schema['primary_keys'][0]
-    column_names = [col['name'] for col in columns]
+    column_names = [_sanitize_identifier(col['name']) for col in columns]
     update_columns = [col for col in column_names if col != pk]
     insert_columns = ', '.join(column_names)
     insert_values = ', '.join([f':{col}' for col in column_names])
@@ -283,7 +320,7 @@ LIMIT :limit OFFSET :offset;
 -- UPDATE
 UPDATE {table}
 SET {update_assignments}
-WHERE {pk} = :{pk};
+    WHERE {pk} = :{pk};
 
 -- DELETE
 DELETE FROM {table}
@@ -774,6 +811,10 @@ def generate_crud_api():
 
     if not sql_input:
         return jsonify({'success': False, 'error': 'Proporciona un CREATE TABLE válido'}), 400
+    if len(sql_input) > 20000:
+        return jsonify({'success': False, 'error': 'Entrada demasiado larga'}), 400
+    if len(sql_input) > 20000:
+        return jsonify({'success': False, 'error': 'Entrada demasiado larga'}), 400
 
     if target not in TARGET_LABELS:
         target = 'sql'
@@ -801,7 +842,8 @@ def generate_crud_api():
     except ValueError as validation_error:
         return jsonify({'success': False, 'error': str(validation_error)}), 400
     except Exception as processing_error:
-        return jsonify({'success': False, 'error': f'Error interno: {str(processing_error)}'}), 500
+        # Log the exception server-side in real application (omitted here)
+        return jsonify({'success': False, 'error': 'Error interno al procesar la solicitud'}), 500
 
 
 @generator_bp.route('/api/download-crud-zip', methods=['POST'])
@@ -839,7 +881,8 @@ def download_crud_zip_api():
     except ValueError as validation_error:
         return jsonify({'success': False, 'error': str(validation_error)}), 400
     except Exception as processing_error:
-        return jsonify({'success': False, 'error': f'Error interno: {str(processing_error)}'}), 500
+        # Log the exception server-side in real application (omitted here)
+        return jsonify({'success': False, 'error': 'Error interno al procesar la solicitud'}), 500
 
 
 def generate_sql(data):
@@ -850,7 +893,7 @@ def generate_sql(data):
 
     select_clause = '*'
     if payload['columns']:
-        select_clause = ', '.join(payload['columns'])
+        select_clause = ', '.join([_sanitize_identifier(c) for c in payload['columns']])
     if payload['distinct']:
         select_clause = f'DISTINCT {select_clause}'
 
@@ -862,7 +905,7 @@ def generate_sql(data):
             table = join.get('table') or ''
             condition = join.get('condition') or ''
             if table and condition:
-                join_sql.append(f"{join_type} JOIN {table} ON {condition}")
+                join_sql.append(f"{join_type} JOIN {_sanitize_identifier(table)} ON {condition}")
 
     from_clause = base_table
     if join_sql:
@@ -928,6 +971,9 @@ def _build_query_payload(data):
     if isinstance(tables, str):
         tables = [t.strip() for t in tables.split(',') if t.strip()]
 
+    # sanitize table identifiers
+    tables = [_sanitize_identifier(t) for t in tables]
+
     columns = _normalize_text_list(data.get('columns', []))
     filters = data.get('filters', [])
     if isinstance(filters, str):
@@ -937,6 +983,13 @@ def _build_query_payload(data):
     group_by = (data.get('group_by') or '').strip()
     order_by = (data.get('order_by') or '').strip()
     limit = (data.get('limit') or '').strip()
+    # Coerce limit to integer safely
+    try:
+        limit = int(limit) if str(limit).strip() else ''
+        if isinstance(limit, int) and (limit < 0 or limit > 10000):
+            raise ValueError('Límite fuera de rango')
+    except ValueError:
+        limit = ''
     distinct = bool(data.get('distinct', False))
 
     return {
